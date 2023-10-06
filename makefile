@@ -6,7 +6,8 @@ ARCH = $(shell uname -m)
 
 BUILDDIR = $(abspath ./build)
 SOURCEDIR = $(abspath .)
-ARCHDIR = $(SOURCEDIR)/arch/$(ARCH)
+RELARCHDIR = arch/$(ARCH)
+ARCHDIR = $(SOURCEDIR)/$(RELARCHDIR)
 TARGET = $(BUILDDIR)/mimik-$(VERSION)-$(ARCH)
 CSOURCES = $(shell find $(SOURCEDIR) -type f -name '*.c' -not -path '$(SOURCEDIR)/arch/*')
 SSOURCES = $(shell find $(SOURCEDIR) -type f -name '*.S' -not -path '$(SOURCEDIR)/arch/*')
@@ -16,14 +17,18 @@ LD = ld
 DBG = gdb
 VM = qemu-system-$(ARCH)
 
+DEFINES = \
+	-DMIMIK_ARCH_$(call uppercase, $(ARCH))
 CCFLAGS = \
 	-ffreestanding 							\
 	-mno-red-zone 							\
 	-Wall 									\
 	-Werror 								\
+	-O0										\
+	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
-	-DMIMIK_ARCH_$(call uppercase, $(ARCH))
-LDFLAGS = -nostdlib
+	-I$(SOURCEDIR)/include/arch/$(ARCH)
+LDFLAGS = -nostdlib -z noexecstack
 VMFLAGS = \
 	-cpu qemu64								\
 	-smp cpus=1,cores=2,threads=2,maxcpus=4	\
@@ -43,9 +48,7 @@ DBGFLAGS = \
 include $(ARCHDIR)/config.mk
 
 ifeq ($(BUILDTYPE),DEBUG)
-CCFLAGS += -g
-else
-CCFLAGS += -O2
+CCFLAGS += -ggdb
 endif
 
 OBJECTS = \
@@ -54,9 +57,9 @@ OBJECTS = \
 
 .PHONY: run debug clean
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(BUILDDIR)/$(LDS) $(OBJECTS)
 	@mkdir -p $(dir $@)
-	$(LD) $(LDFLAGS) -T$(LDS) -o $@ $^
+	$(LD) $(LDFLAGS) -T$^ -o $@
 
 run: $(TARGET)
 	$(VM) $(VMFLAGS)
@@ -70,8 +73,12 @@ clean:
 
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
 	
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.S
 	@mkdir -p $(dir $@)
-	$(CC) $(CCFLAGS) -c $< -o $@
+	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
+
+$(BUILDDIR)/$(LDS): $(SOURCEDIR)/$(LDS)
+	@mkdir -p $(dir $@)
+	$(CC) -E -P -x c $(DEFINES) $< > $@

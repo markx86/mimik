@@ -23,20 +23,20 @@
 #define MULTIBOOT_HEADER 1
 
 /* How many bytes from the start of the file we search for the header.  */
-#define MULTIBOOT_SEARCH			32768
-#define MULTIBOOT_HEADER_ALIGN			8
+#define MULTIBOOT_SEARCH      32768
+#define MULTIBOOT_HEADER_ALIGN      8
 
 /* The magic field should contain this.  */
-#define MULTIBOOT2_HEADER_MAGIC			0xe85250d6
+#define MULTIBOOT2_HEADER_MAGIC      0xe85250d6
 
 /* This should be in %eax.  */
-#define MULTIBOOT2_BOOTLOADER_MAGIC		0x36d76289
+#define MULTIBOOT2_BOOTLOADER_MAGIC    0x36d76289
 
 /* Alignment of multiboot modules.  */
-#define MULTIBOOT_MOD_ALIGN			0x00001000
+#define MULTIBOOT_MOD_ALIGN      0x00001000
 
 /* Alignment of the multiboot info structure.  */
-#define MULTIBOOT_INFO_ALIGN			0x00000008
+#define MULTIBOOT_INFO_ALIGN      0x00000008
 
 /* Flags set in the 'flags' member of the multiboot header.  */
 
@@ -88,10 +88,10 @@
 
 #ifndef ASM_FILE
 
-typedef unsigned char		multiboot_uint8_t;
-typedef unsigned short		multiboot_uint16_t;
-typedef unsigned int		multiboot_uint32_t;
-typedef unsigned long long	multiboot_uint64_t;
+typedef unsigned char    multiboot_uint8_t;
+typedef unsigned short    multiboot_uint16_t;
+typedef unsigned int    multiboot_uint32_t;
+typedef unsigned long long  multiboot_uint64_t;
 
 struct multiboot_header
 {
@@ -189,8 +189,8 @@ struct multiboot_mmap_entry
 {
   multiboot_uint64_t addr;
   multiboot_uint64_t len;
-#define MULTIBOOT_MEMORY_AVAILABLE		1
-#define MULTIBOOT_MEMORY_RESERVED		2
+#define MULTIBOOT_MEMORY_AVAILABLE    1
+#define MULTIBOOT_MEMORY_RESERVED    2
 #define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE       3
 #define MULTIBOOT_MEMORY_NVS                    4
 #define MULTIBOOT_MEMORY_BADRAM                 5
@@ -283,7 +283,7 @@ struct multiboot_tag_framebuffer_common
   multiboot_uint8_t framebuffer_bpp;
 #define MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED 0
 #define MULTIBOOT_FRAMEBUFFER_TYPE_RGB     1
-#define MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT	2
+#define MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT  2
   multiboot_uint8_t framebuffer_type;
   multiboot_uint16_t reserved;
 };

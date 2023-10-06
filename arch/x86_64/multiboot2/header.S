@@ -3,7 +3,7 @@
 #define ASM_FILE
 #include "multiboot2.h"
 
-.section .multiboot.data , "a", @progbits
+.section .multiboot.data , "aw", @progbits
 /* Multiboot header. */
 #define MULTIBOOT2_HEADER_LENGTH (multiboot2_header_end-multiboot2_header)
 #define MULTIBOOT2_HEADER_CHECKSUM  \
