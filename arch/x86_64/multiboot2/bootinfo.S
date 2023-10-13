@@ -203,26 +203,27 @@ parse_next_tag:
 0:
 
   cmpl $MULTIBOOT_TAG_TYPE_ACPI_OLD, %eax
-  jne 2f
+  jne 0f
   /* handle rsdp */
   movl $1, (acpi_type)
-  jmp 0f
+  jmp 1f
+0:
   cmpl $MULTIBOOT_TAG_TYPE_ACPI_NEW, %eax
-  jne 0f
+  jne 3f
   /* handle xsdp */
   movl $2, (acpi_type)
-0:
+1:
   /* copy the acpi struct */
   pushl %ebx
   movl $acpi_struct, %ebx
-1:
+2:
   movb (%edx), %al
   incl %edx
   movb %al, (%ebx)
-  incl %eax
-  loop 1b
+  incl %ebx
+  loop 2b
   popl %ebx
-2:
+3:
 
   /* advance to next tag */
   /* 1. compute the tag end address */
