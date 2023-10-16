@@ -1,5 +1,3 @@
-#ifdef MIMIK_BOOTPROTOCOL_MULTIBOOT2
-
 #define ASM_FILE
 #include "multiboot2.h"
 
@@ -247,5 +245,3 @@ end:
   popl %eax
   movl %ebx, %eax
   ret
-
-#endif

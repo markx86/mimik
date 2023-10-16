@@ -1,5 +1,3 @@
-#ifdef MIMIK_BOOTPROTOCOL_MULTIBOOT2
-
 #define ASM_FILE
 #include "multiboot2.h"
 
@@ -42,5 +40,3 @@ ending:
   .short 0
   .long (multiboot2_header_end-ending)
 multiboot2_header_end:
-
-#endif /* MIMIK_BOOTPROTOCOL_MULTIBOOT2 */

@@ -45,7 +45,7 @@ DBGFLAGS = \
 	-ex "set disassemble-next-instruction on"	\
 	-ex "add-symbol-file $(TARGET)"
 
-include $(ARCHDIR)/config.mk
+include $(ARCHDIR)/arch.mk
 
 ifeq ($(BUILDTYPE),DEBUG)
 CCFLAGS += -ggdb
