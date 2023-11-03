@@ -1,4 +1,5 @@
 uppercase = $(shell echo $(1) | tr 'a-z' 'A-Z')
+findsources = $(shell find $(1) -type f -name '*.S' -or -name '*.c' $(2))
 
 BUILDTYPE = DEBUG
 VERSION = 0.0.1
@@ -8,9 +9,9 @@ BUILDDIR = $(abspath ./build)
 SOURCEDIR = $(abspath .)
 RELARCHDIR = arch/$(ARCH)
 ARCHDIR = $(SOURCEDIR)/$(RELARCHDIR)
+
 TARGET = $(BUILDDIR)/mimik-$(VERSION)-$(ARCH)
-CSOURCES = $(shell find $(SOURCEDIR) -type f -name '*.c' -not -path '$(SOURCEDIR)/arch/*')
-SSOURCES = $(shell find $(SOURCEDIR) -type f -name '*.S' -not -path '$(SOURCEDIR)/arch/*')
+SOURCES = $(call findsources, $(SOURCEDIR), -not -path '$(SOURCEDIR)/arch/*')
 
 CC = gcc
 LD = ld
@@ -25,6 +26,7 @@ CCFLAGS = \
 	-Wall 									\
 	-Werror 								\
 	-O0										\
+	-std=c99								\
 	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
 	-I$(SOURCEDIR)/include/arch/$(ARCH)
@@ -51,9 +53,8 @@ ifeq ($(BUILDTYPE),DEBUG)
 CCFLAGS += -ggdb
 endif
 
-OBJECTS = \
-	$(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%.o,$(CSOURCES)) \
-	$(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%.o,$(SSOURCES))
+OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
+OBJECTS := $(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%.o,$(OBJECTS))
 
 .PHONY: run debug clean
 
