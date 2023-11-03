@@ -72,6 +72,9 @@ debug: $(TARGET)
 clean:
 	rm -rf $(BUILDDIR)
 
+fmt:
+	clang-format -i $(shell find $(SOURCEDIR) -name '*.c' -or -name '*.h' -type f)
+
 $(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
