@@ -157,11 +157,11 @@ reload64:
    * (rsp+0): the return address
    * (rsp+8): the gdt code segment selector
    * in this case we want to return to our 64 bit long mode entry in the higher
-   * half (_start64) and with cs pointing to the kernel code segment
+   * half (_stub64) and with cs pointing to the kernel code segment
    */
   addq $4, %rsp
   pushq $GDT_KERNEL_CS
-  movq $_start64, %rax
+  movq $_stub64, %rax
   pushq %rax
   retfq
 

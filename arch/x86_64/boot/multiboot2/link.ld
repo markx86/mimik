@@ -1,5 +1,5 @@
 OUTPUT_FORMAT(elf64-x86-64)
-ENTRY(_start32)
+ENTRY(_start)
 
 SECTIONS {
 	. = 0x0000000000010000;
@@ -13,6 +13,7 @@ SECTIONS {
 	}
 
 	.entry.bss : {
+		*(.multiboot.bss)
 		*(.entry.bss)
 	}
 
