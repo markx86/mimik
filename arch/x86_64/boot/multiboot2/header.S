@@ -19,21 +19,7 @@ multiboot2_header:
 module_alignment:
   .short MULTIBOOT_HEADER_TAG_MODULE_ALIGN
   .short 0
-  .long (console_flags-module_alignment)
-/* console flags tag */
-console_flags:
-  .short MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS
-  .short MULTIBOOT_HEADER_TAG_OPTIONAL
-  .long (framebuffer-console_flags)
-  .long MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED
-/* framebuffer tag */
-framebuffer:
-  .short MULTIBOOT_HEADER_TAG_FRAMEBUFFER
-  .short MULTIBOOT_HEADER_TAG_OPTIONAL
-  .long (ending-framebuffer)
-  .long 0
-  .long 0
-  .long 0
+  .long (ending-module_alignment)
 /* end tag */
 ending:
   .short MULTIBOOT_HEADER_TAG_END

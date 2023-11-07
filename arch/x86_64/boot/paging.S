@@ -47,7 +47,7 @@ setup_paging:
   pushl %ecx
   
   /*
-   * for simplicity we'll with a recursive map of the kernel
+   * for simplicity's sake we'll start with a recursive map of the kernel
    * the pml4, pdp and pd entries will have it's physical address
    * pointing back to `table`
    */

@@ -137,6 +137,7 @@ enable_features:
  *
  * Expected machine state:
  * - a valid 64 bit gdt with the same segments as the one defined in gdt.S
+ * - the kernel mapped correctly into higher half
  * - (rsp): pointer to bootinfo data end address
  */
 .global _stub64
