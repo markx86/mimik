@@ -48,4 +48,12 @@ typedef uint64_t addr_t;
 typedef void* ptr_t;
 #define NULL ((void*)0)
 
+typedef uint8_t bool;
+#define TRUE 1
+#define FALSE 0
+
+typedef int8_t status;
+#define SUCCESS 0
+#define ISERROR(e) ((e) < 0)
+
 #endif
