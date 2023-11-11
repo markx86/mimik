@@ -14,8 +14,8 @@ stack_top:
 _bootinfo:
   BOOTINFO_ENTRY(_bootinfo_cmdline, .quad 0)
   BOOTINFO_ENTRY(_bootinfo_modules, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_memmap_entries, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_memmap_segments, .quad 0)
+  BOOTINFO_ENTRY(_bootinfo_mem_map_entries, .quad 0)
+  BOOTINFO_ENTRY(_bootinfo_mem_map_segments, .quad 0)
   BOOTINFO_ENTRY(_bootinfo_acpi_type, .quad 0)
   BOOTINFO_ENTRY(_bootinfo_acpi_struct, .fill 40 C 1 C 0)
 #undef C

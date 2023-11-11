@@ -79,7 +79,7 @@ setup_paging:
   popl %edi
   call get_entry
 0:
-  /* map kernel */
+  /* map pages */
   movl %ebx, %eax
   andl $ENTRY_ADDR_MASK, %eax
   orl $ENTRY_FLAGS, %eax

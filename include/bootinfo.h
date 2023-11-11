@@ -10,23 +10,23 @@ struct bootinfo_module {
   char cmdline[];
 };
 
-enum bootinfo_memsegment_type {
-  BOOTINFO_MEMSEGMENT_TYPE_RESERVED = 0,
-  BOOTINFO_MEMSEGMENT_TYPE_AVAILABLE = 1,
+enum bootinfo_mem_segment_type {
+  BOOTINFO_MEM_SEGMENT_TYPE_RESERVED = 0,
+  BOOTINFO_MEM_SEGMENT_TYPE_AVAILABLE = 1,
 };
 
-struct bootinfo_memsegment {
+struct bootinfo_mem_segment {
   union {
-    enum bootinfo_memsegment_type type;
+    enum bootinfo_mem_segment_type type;
     uint64_t force8;
   };
   addr_t addr;
   size_t length;
 };
 
-struct bootinfo_memmap {
+struct bootinfo_mem_map {
   size_t entries;
-  struct bootinfo_memsegment* segments;
+  struct bootinfo_mem_segment* segments;
 };
 
 struct bootinfo_acpi {
@@ -43,7 +43,7 @@ struct bootinfo_acpi {
 struct bootinfo {
   char* cmdline;
   struct bootinfo_module* modules;
-  struct bootinfo_memmap memmap;
+  struct bootinfo_mem_map mem_map;
   struct bootinfo_acpi acpi;
 };
 

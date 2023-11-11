@@ -143,9 +143,9 @@ parse_next_tag:
   popl %ebx
   addl $8, %edx
   movl %eax, %ecx
-  movl %ecx, (_bootinfo_memmap_entries)
+  movl %ecx, (_bootinfo_mem_map_entries)
   /* initialize pointer to memory map entries */
-  movl %ebx, (_bootinfo_memmap_segments)
+  movl %ebx, (_bootinfo_mem_map_segments)
   /*
    * loop variables
    * (esp): the size of each entry
@@ -162,7 +162,7 @@ parse_next_tag:
   jne 1f
   /*
    * if it is, set the type of the segment
-   * to BOOTINFO_MEMSEGMENT_TYPE_AVAILABLE
+   * to BOOTINFO_MEM_SEGMENT_TYPE_AVAILABLE
    */
   movl $1, (%ebx)
   addl $4, %ebx
@@ -171,7 +171,7 @@ parse_next_tag:
 1:
   /*
    * if it is not, set the type of the segment
-   * to BOOTINFO_MEMSEGMENT_TYPE_RESERVED
+   * to BOOTINFO_MEM_SEGMENT_TYPE_RESERVED
    */
   movl $0, (%ebx)
   addl $4, %ebx
