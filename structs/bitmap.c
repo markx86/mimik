@@ -1,15 +1,15 @@
+#include <errno.h>
 #include <structs/bitmap.h>
 #include <util/mem.h>
-#include <errno.h>
 
 struct bitmap bitmap_from(size_t sz, void* ptr) {
   size_t size = sz, bytes = (size + 7) >> 3;
   mem_set(ptr, 0, bytes);
-  return (struct bitmap) {
-    .bytes = bytes,
-    .size = size,
-    .unset = size,
-    .map = ptr,
+  return (struct bitmap){
+      .bytes = bytes,
+      .size = size,
+      .unset = size,
+      .map = ptr,
   };
 }
 

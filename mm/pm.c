@@ -1,11 +1,11 @@
-#include <mm/pm.h>
-#include <mm/page.h>
-#include <util/mem.h>
-#include <structs/bitmap.h>
-#include <structs/list.h>
-#include <kernel.h>
 #include <assert.h>
 #include <errno.h>
+#include <kernel.h>
+#include <mm/page.h>
+#include <mm/pm.h>
+#include <structs/bitmap.h>
+#include <structs/list.h>
+#include <util/mem.h>
 
 #define BITMAP_BYTES PAGE_SIZE
 #define BITMAP_SIZE (BITMAP_BYTES << 3)
@@ -41,7 +41,8 @@ static void compute_mem_size(struct bootinfo_mem_map* mem_map) {
   for (size_t i = 0; i < mem_map->entries; ++i) {
     struct bootinfo_mem_segment* segment = &mem_map->segments[i];
     mem_info.free += segment->length;
-    if (segment->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED && TOBITMP(segment->addr) == 0)
+    if (segment->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED &&
+        TOBITMP(segment->addr) == 0)
       pm_try_lock_pages(segment->addr, segment->length);
   }
 }
@@ -74,8 +75,9 @@ addr_t pm_request_pages(size_t num) {
   status_t err;
   size_t start_index, index, found = 0;
   mem_bitmap = first_free_bitmap;
-  for (index = mem_bitmap->first_free, start_index = index; found < num && index < mem_bitmap->super.size; ++index) {
-retry:
+  for (index = mem_bitmap->first_free, start_index = index;
+       found < num && index < mem_bitmap->super.size; ++index) {
+  retry:
     err = bitmap_get(&mem_bitmap->super, index);
     if (ISERROR(err)) {
       ASSERT(err == -EINVAL);
@@ -91,7 +93,7 @@ retry:
     if (err == BITMAP_PAGEFREE)
       ++found;
     else {
-      start_index = index+1;
+      start_index = index + 1;
       found = 0;
     }
   }
@@ -114,7 +116,7 @@ static struct mem_bitmap* create_bitmap(size_t index) {
   ASSERT(new_bitmap != NULL);
   new_bitmap->first_free = 0;
   new_bitmap->index = 0;
-  new_bitmap->super = bitmap_from(BITMAP_SIZE, (void*) next_bitmap_page);
+  new_bitmap->super = bitmap_from(BITMAP_SIZE, (void*)next_bitmap_page);
   list_insert(mem_bitmap->link.prev, &new_bitmap->link);
   next_bitmap_page = pm_request_page();
   return new_bitmap;
@@ -126,7 +128,8 @@ static void find_first_free_bitmap(void) {
     if (mem_bitmap->super.unset > 0) {
       first_free_bitmap = mem_bitmap;
       return;
-    } else if (prev_bitmap == NULL || mem_bitmap->index - prev_bitmap->index == 1)
+    } else if (
+        prev_bitmap == NULL || mem_bitmap->index - prev_bitmap->index == 1)
       prev_bitmap = mem_bitmap;
   }
   ASSERT(prev_bitmap != NULL);
@@ -144,7 +147,8 @@ static struct mem_bitmap* find_bitmap_by_index(size_t index) {
 
 static bool_t find_first_free_index(void) {
   do {
-    status_t err = bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
+    status_t err =
+        bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
     if (ISERROR(err)) {
       ASSERT(err == -EINVAL);
       find_first_free_bitmap();
@@ -202,7 +206,8 @@ bool_t pm_try_release_page(addr_t paddr) {
     size_t index, bitmap = TOBITMP(paddr);
     if (bitmap < first_free_bitmap->index)
       first_free_bitmap = find_bitmap_by_index(bitmap);
-    if (bitmap == first_free_bitmap->index && (index = TOINDEX(paddr)) < first_free_bitmap->first_free)
+    if (bitmap == first_free_bitmap->index &&
+        (index = TOINDEX(paddr)) < first_free_bitmap->first_free)
       first_free_bitmap->first_free = index;
     mem_info.used -= PAGE_SIZE;
     mem_info.free += PAGE_SIZE;

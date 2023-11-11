@@ -3,6 +3,8 @@
 
 void _assert(void);
 
-#define ASSERT(x) if (!(x)) _assert()
+#define ASSERT(x) \
+  if (!(x))       \
+    _assert()
 
 #endif
