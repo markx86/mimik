@@ -4,7 +4,8 @@
 
 struct kernel_config kcfg;
 
-static void parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
+static void
+parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
   kcfg.bootinfo = bootinfo;
 
   /* Parse cmdline. */
@@ -20,7 +21,8 @@ static void parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
   }
 }
 
-void kernel_main(
+void
+kernel_main(
     struct bootinfo* bootinfo,
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {

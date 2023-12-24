@@ -2,7 +2,8 @@
 #include <structs/bitmap.h>
 #include <util/mem.h>
 
-struct bitmap bitmap_from(size_t sz, ptr_t ptr) {
+struct bitmap
+bitmap_from(size_t sz, ptr_t ptr) {
   size_t size = sz, bytes = (size + 7) >> 3;
   mem_set(ptr, 0, bytes);
   return (struct bitmap){
@@ -13,7 +14,8 @@ struct bitmap bitmap_from(size_t sz, ptr_t ptr) {
   };
 }
 
-status_t bitmap_get(struct bitmap* b, size_t i) {
+status_t
+bitmap_get(struct bitmap* b, size_t i) {
   size_t byte;
   uint8_t bit;
   if (i >= b->size)
@@ -23,7 +25,8 @@ status_t bitmap_get(struct bitmap* b, size_t i) {
   return (b->map[byte] >> bit) & 1;
 }
 
-status_t bitmap_set(struct bitmap* b, size_t i, bool_t v) {
+status_t
+bitmap_set(struct bitmap* b, size_t i, bool_t v) {
   size_t byte;
   uint8_t bit, mask;
   if (i >= b->size)
