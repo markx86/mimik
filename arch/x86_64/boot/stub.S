@@ -40,11 +40,14 @@ _stub32:
   /* store the bootinfo data end address */
   pushl $0
   pushl %eax
+  /* copy the bootinfo data end address as it's needed in setup_paging */
+  pushl %eax
   /* load GDT */
   call load_gdt
   /* check if the required features are supported */
   call check_feature_support
   /* setup paging */
+  popl %ebx
   call setup_paging
   /* enable features and long mode */
   call enable_features

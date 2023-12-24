@@ -1,7 +1,15 @@
 .section .entry.bss, "aw", @nobits
-.align 4096
-table:
-  .skip 4096
+
+#define SIZE_4KB 0x1000
+#define DEFINE_PT(name) \
+  .align SIZE_4KB      ;\
+  name:                ;\
+    .skip SIZE_4KB
+
+DEFINE_PT(pml4)
+DEFINE_PT(pdp)
+DEFINE_PT(pd)
+DEFINE_PT(pt)
 
 .section .entry.data, "aw", @progbits
 /* shut the compiler up */
@@ -12,16 +20,23 @@ kernel_vaddr_start:
 .code32
 
 #define ENTRY_FLAG_PRESENT (1 << 0)
-#define ENTRY_FLAG_READWRITE (1 << 1)
+#define ENTRY_FLAG_WRITABLE (1 << 1)
 #define ENTRY_FLAGS     \
   (ENTRY_FLAG_PRESENT | \
-  ENTRY_FLAG_READWRITE)
-#define ENTRY_ADDR_MASK 0xFFFFFFFFFF000
-
-#define SIZE_4KB 0x1000
+  ENTRY_FLAG_WRITABLE)
 
 .global setup_paging
 setup_paging:
+  /* zero out page tables */
+  movl $pml4, %edi
+  call zero_pt
+  movl $pdp, %edi
+  call zero_pt
+  movl $pd, %edi
+  call zero_pt
+  movl $pt, %edi
+  call zero_pt
+
   /* compute page table indices */
   movl (kernel_vaddr_start), %eax
   movl (kernel_vaddr_start+4), %edx
@@ -45,55 +60,69 @@ setup_paging:
   movl %eax, %ecx
   andl $0x1FF, %ecx
   pushl %ecx
-  
-  /*
-   * for simplicity's sake we'll start with a recursive map of the kernel
-   * the pml4, pdp and pd entries will have it's physical address
-   * pointing back to `table`
-   */
-  movl $table, %eax
-  andl $ENTRY_ADDR_MASK, %eax
-  orl $ENTRY_FLAGS, %eax
-  /* set the pml4 entry */
-  popl %edi
-  call get_entry
-  movl %eax, (%edi)
-  /* set the pdp entry */
-  popl %edi
-  call get_entry
-  movl %eax, (%edi)
-  /* set the pd entry */
-  popl %edi
-  call get_entry
-  movl %eax, (%edi)
 
+  /*
+   * recursive map the lower half of the kernel
+   * NOTE: pml4[0] and pt[0] have to be free
+   */
+  movl $(pt + ENTRY_FLAGS), %eax
+  movl %eax, (pml4)
+  movl %eax, (pt)
+
+  /* set pml4 entry */
+  popl %edi
+  movl $pml4, %esi
+  call get_entry
+  movl $(pdp + ENTRY_FLAGS), (%edi)
+  /* set pdp entry */
+  popl %edi
+  movl $pdp, %esi
+  call get_entry
+  movl $(pd + ENTRY_FLAGS), (%edi)
+  /* set pd entry */
+  popl %edi
+  movl $pd, %esi
+  call get_entry
+  movl $(pt + ENTRY_FLAGS), (%edi)
   /* store map start address */
-  movl $_kernel_paddr_start, %ebx
-  /* compute kernel size in pages */
-  movl $_kernel_paddr_end, %ecx
-  subl %ebx, %ecx
+  movl $_kernel_paddr_start, %edx
+  andl $~0xFFF, %edx
+  /*
+   * compute kernel size in pages
+   * NOTE: %ebx contains the bootinfo end address,
+   *       which *should* be greater than _kernel_paddr_end
+   */
+  movl %ebx, %ecx
   addl $0xFFF, %ecx
   andl $~0xFFF, %ecx
+  subl %edx, %ecx
   shrl $12, %ecx
   /* get first kernel page directory entry */
   popl %edi
+  movl $pt, %esi
   call get_entry
 0:
   /* map pages */
-  movl %ebx, %eax
-  andl $ENTRY_ADDR_MASK, %eax
+  movl %edx, %eax
   orl $ENTRY_FLAGS, %eax
   movl %eax, (%edi)
+  addl $SIZE_4KB, %edx
   addl $8, %edi
-  addl $SIZE_4KB, %ebx
   loop 0b
   /* set pml4 */
-  movl $table, %eax
-  andl $ENTRY_ADDR_MASK, %eax
+  movl $pml4, %eax
   movl %eax, %cr3
   ret
 
 get_entry:
   shl $3, %edi
-  addl $table, %edi
+  addl %esi, %edi
+  ret
+
+zero_pt:
+  movl $(SIZE_4KB >> 2), %ecx
+0:
+  movl $0, (%edi)
+  addl $4, %edi
+  loop 0b
   ret
