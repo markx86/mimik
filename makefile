@@ -24,7 +24,6 @@ GCCFLAGS = \
 	-ffreestanding 							\
 	-mno-red-zone 							\
 	-Wall 									\
-	-Werror 								\
 	-O0										\
 	-std=c99								\
 	-mcmodel=kernel							\
@@ -51,12 +50,14 @@ include $(ARCHDIR)/arch.mk
 
 ifeq ($(BUILDTYPE),DEBUG)
 GCCFLAGS += -ggdb
+else
+GCCFLAGS += -Werror
 endif
 
 OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 OBJECTS := $(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%.o,$(OBJECTS))
 
-.PHONY: run debug clean
+.PHONY: run debug clean fmt
 
 $(TARGET): $(BUILDDIR)/$(LDS) $(OBJECTS)
 	@mkdir -p $(dir $@)
