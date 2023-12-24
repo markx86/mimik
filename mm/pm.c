@@ -116,7 +116,7 @@ static struct mem_bitmap* create_bitmap(size_t index) {
   ASSERT(new_bitmap != NULL);
   new_bitmap->first_free = 0;
   new_bitmap->index = 0;
-  new_bitmap->super = bitmap_from(BITMAP_SIZE, (void*)next_bitmap_page);
+  new_bitmap->super = bitmap_from(BITMAP_SIZE, (ptr_t)next_bitmap_page);
   list_insert(mem_bitmap->link.prev, &new_bitmap->link);
   next_bitmap_page = pm_request_page();
   return new_bitmap;

@@ -12,7 +12,7 @@ struct bitmap {
   uint8_t* map;
 };
 
-struct bitmap bitmap_from(size_t sz, void* addr);
+struct bitmap bitmap_from(size_t sz, ptr_t addr);
 status_t bitmap_get(struct bitmap* b, size_t i);
 status_t bitmap_set(struct bitmap* b, size_t i, bool_t v);
 

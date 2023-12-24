@@ -46,7 +46,7 @@ typedef uint64_t addr_t;
 #define ADDR_MAX UINT64_MAX
 
 typedef void* ptr_t;
-#define NULL ((void*)0)
+#define NULL ((ptr_t)0)
 
 typedef uint8_t bool_t;
 #define TRUE 1

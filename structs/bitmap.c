@@ -2,7 +2,7 @@
 #include <structs/bitmap.h>
 #include <util/mem.h>
 
-struct bitmap bitmap_from(size_t sz, void* ptr) {
+struct bitmap bitmap_from(size_t sz, ptr_t ptr) {
   size_t size = sz, bytes = (size + 7) >> 3;
   mem_set(ptr, 0, bytes);
   return (struct bitmap){
