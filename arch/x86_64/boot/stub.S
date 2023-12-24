@@ -69,6 +69,7 @@ _fail:
 #define CPUID_FEATURES_PAE (1 << 6)
 #define CPUID_FEATURES_SYSCALL (1 << 11)
 #define CPUID_FEATURES_LM (1 << 29)
+#define CPUID_FEATURES_NX (1 << 20)
 
 check_feature_support:
   /* 1. check if cpuid is supported */
@@ -109,10 +110,15 @@ check_feature_support:
   /* 6. check if syscall/sysret instructions are supported */
   testl $CPUID_FEATURES_SYSCALL, %edx
   jz _fail
+  /* 7. check if no-execute bit is supported */
+  testl $CPUID_FEATURES_NX, %edx
+  jz _fail
   ret
 
 #define MSR_EFER 0xC0000080
 #define MSR_EFER_BIT_LM (1 << 8)
+#define MSR_EFER_BIT_NX (1 << 11)
+
 #define CR0_BIT_PG (1 << 31)
 #define CR4_BIT_PAE (1 << 5)
 
@@ -121,10 +127,13 @@ enable_features:
   movl %cr4, %eax
   orl $CR4_BIT_PAE, %eax
   movl %eax, %cr4
-  /* enable long mode */
+  /* enable EFER features */
   movl $MSR_EFER, %ecx
   rdmsr
+  /* enable long mode */
   orl $MSR_EFER_BIT_LM, %eax
+  /* enable no-execute bit */
+  orl $MSR_EFER_BIT_NX, %eax
   wrmsr
   /* enable paging */
   movl %cr0, %eax
