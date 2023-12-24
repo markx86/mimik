@@ -3,9 +3,6 @@
 
 #include <types.h>
 
-#define ENOPAGES 0
-#define EINVPAGE 1
-
 void pm_init(addr_t free_mem_ptr);
 
 addr_t pm_request_page(void);

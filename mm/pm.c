@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <errno.h>
+#include <errors.h>
 #include <kernel.h>
 #include <mm/page.h>
 #include <mm/pm.h>

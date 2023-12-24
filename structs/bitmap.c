@@ -1,4 +1,4 @@
-#include <errno.h>
+#include <errors.h>
 #include <structs/bitmap.h>
 #include <util/mem.h>
 
