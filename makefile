@@ -28,7 +28,7 @@ GCCFLAGS = \
 	-std=c99								\
 	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
-	-I$(SOURCEDIR)/include/arch/$(ARCH)
+	-I$(SOURCEDIR)/arch/$(ARCH)/include
 LDFLAGS = -nostdlib -z noexecstack
 QEMUFLAGS = \
 	-cpu qemu64								\
