@@ -23,6 +23,7 @@ DEFINES = \
 GCCFLAGS = \
 	-ffreestanding 							\
 	-mno-red-zone 							\
+	-mno-sse								\
 	-Wall 									\
 	-O0										\
 	-std=c99								\
@@ -36,6 +37,7 @@ QEMUFLAGS = \
 	-machine q35							\
 	-m 128M									\
 	-vga std								\
+	-serial stdio							\
 	-kernel $(TARGET)
 QEMUGDBFLAGS = -s -S -d guest_errors,cpu_reset,int -no-reboot -no-shutdown
 GDBFLAGS = \

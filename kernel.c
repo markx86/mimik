@@ -1,23 +1,24 @@
 #include <kernel.h>
 #include <mm/pm.h>
 #include <mm/vm.h>
+#include <assert.h>
 
 struct kernel_config kcfg;
 
 static void
 parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
+  struct bootinfo_module* module;
+
   kcfg.bootinfo = bootinfo;
 
   /* Parse cmdline. */
   for (char* s = bootinfo->cmdline; *s != '\0'; s++) {
   }
 
-  struct bootinfo_module* module;
   /* Find modules. */
   for (module = bootinfo->modules; module != NULL; module = module->next) {
-    if (module->end_address > *free_mem_ptr) {
+    if (module->end_address > *free_mem_ptr)
       *free_mem_ptr = module->end_address;
-    }
   }
 }
 
@@ -30,4 +31,5 @@ kernel_main(
   parse_bootinfo(bootinfo, &free_mem_ptr);
   pm_init(free_mem_ptr);
   vm_init();
+  ASSERT(0 && "Hello from MIMIK!");
 }

@@ -7,6 +7,6 @@ void _assert(const char* file, size_t line, const char* msg);
 
 #define ASSERT(x) \
   if (!(x))       \
-  _assert(__FILE__, __LINE__, NULL)
+  _assert(__FILE__, __LINE__, #x)
 
 #endif
