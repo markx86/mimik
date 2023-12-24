@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <mm/pm.h>
+#include <mm/vm.h>
 
 struct kernel_config kcfg;
 
@@ -26,4 +27,5 @@ void kernel_main(
   addr_t free_mem_ptr = bootinfo_data_end;
   parse_bootinfo(bootinfo, &free_mem_ptr);
   pm_init(free_mem_ptr);
+  vm_init();
 }

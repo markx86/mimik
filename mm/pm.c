@@ -3,6 +3,7 @@
 #include <kernel.h>
 #include <mm/page.h>
 #include <mm/pm.h>
+#include <mm/vm.h>
 #include <structs/bitmap.h>
 #include <structs/list.h>
 #include <util/mem.h>
@@ -60,6 +61,7 @@ void pm_init(addr_t free_mem_ptr) {
   init_first_bitmap();
   compute_mem_size(&kcfg.bootinfo->mem_map);
   pm_try_lock_pages_range(KERNEL_START_PADDR, KERNEL_END_PADDR);
+  next_bitmap_page = pm_request_page();
 }
 
 addr_t pm_request_page(void) {
