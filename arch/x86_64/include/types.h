@@ -52,7 +52,7 @@ typedef uint8_t bool_t;
 #define TRUE 1
 #define FALSE 0
 
-typedef int8_t status_t;
+typedef int64_t status_t;
 #define SUCCESS 0
 #define ISERROR(e) ((e) < 0)
 
