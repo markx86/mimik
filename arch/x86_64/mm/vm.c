@@ -317,7 +317,7 @@ vm_map_pages(
 }
 
 status_t
-vm_map_kernel_pages(
+vm_kmap_pages(
     addr_t paddr_start,
     size_t pages,
     addr_t* vaddr_hint,
@@ -367,7 +367,7 @@ vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages) {
 }
 
 void
-vm_unmap_kernel_pages(addr_t vaddr_start, size_t pages) {
+vm_kunmap_pages(addr_t vaddr_start, size_t pages) {
   vm_unmap_pages(pml4, vaddr_start, pages);
 }
 
@@ -408,6 +408,6 @@ vm_vaddr_to_paddr(ptr_t table, addr_t vaddr, addr_t* paddr) {
 }
 
 status_t
-vm_kernel_vaddr_to_paddr(addr_t vaddr, addr_t* paddr) {
+vm_kvaddr_to_paddr(addr_t vaddr, addr_t* paddr) {
   return vm_vaddr_to_paddr(pml4, vaddr, paddr);
 }
