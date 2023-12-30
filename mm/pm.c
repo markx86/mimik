@@ -1,12 +1,13 @@
-#include <assert.h>
-#include <errors.h>
-#include <kernel.h>
-#include <mm/page.h>
 #include <mm/pm.h>
 #include <mm/vm.h>
+#include <mm/mm.h>
+#include <mm/page.h>
 #include <structs/bitmap.h>
 #include <structs/list.h>
 #include <util/mem.h>
+#include <assert.h>
+#include <errors.h>
+#include <kernel.h>
 
 #define BITMAP_BYTES PAGE_SIZE
 #define BITMAP_SIZE (BITMAP_BYTES << 3)
@@ -70,8 +71,10 @@ pm_init(addr_t free_mem_ptr) {
 addr_t
 pm_request_page(void) {
   addr_t paddr;
+  if (PAGE_SIZE > mem_info.free)
+    return 0; /* TODO: change return type to status_t */
   paddr = TOPADDR(first_free_bitmap->index, first_free_bitmap->first_free++);
-  pm_try_lock_page(paddr);
+  ASSERT(pm_try_lock_page(paddr));
   return paddr;
 }
 
@@ -81,6 +84,8 @@ pm_request_pages(size_t num) {
   addr_t paddr;
   status_t err;
   size_t start_index, index, found = 0;
+  if (BYTES(num) > mem_info.free)
+    return 0; /* TODO: change return type to status_t */
   mem_bitmap = first_free_bitmap;
   for (index = mem_bitmap->first_free, start_index = index;
        found < num && index < mem_bitmap->super.size;
@@ -122,7 +127,7 @@ create_bitmap(size_t index) {
     if (mem_bitmap->index > index)
       break;
   }
-  new_bitmap = NULL; /* TODO: allocate new bitmap */
+  new_bitmap = mm_alloc(sizeof(struct mem_bitmap));
   ASSERT(new_bitmap != NULL);
   new_bitmap->first_free = 0;
   new_bitmap->index = 0;
