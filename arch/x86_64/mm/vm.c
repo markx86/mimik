@@ -287,11 +287,11 @@ vm_map_pages(
   union vaddr vaddr_indices = {0};
 
   ASSERT(table != NULL);
+  ASSERT(vaddr_hint != NULL);
 
   if (flags & VM_MAP_STRICT && vaddr_hint == NULL)
     return -EINVAL;
-  if (vaddr_hint != NULL)
-    vaddr_indices.address = *vaddr_hint;
+  vaddr_indices.address = *vaddr_hint;
   indices = (size_t[4]){
       vaddr_indices.pml4_index,
       vaddr_indices.pdp_index,
