@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <mm/pm.h>
 #include <mm/vm.h>
+#include <mm/mm.h>
 #include <assert.h>
 
 struct kernel_config kcfg;
@@ -31,5 +32,6 @@ kernel_main(
   parse_bootinfo(bootinfo, &free_mem_ptr);
   pm_init(free_mem_ptr);
   vm_init();
+  mm_init();
   ASSERT(0 && "Hello from MIMIK!");
 }
