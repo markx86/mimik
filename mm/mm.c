@@ -2,8 +2,7 @@
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <util/align.h>
-#include <util/attributes.h>
-#include <util/printk.h>
+#include <util/compiler.h>
 #include <assert.h>
 
 #define HEAP_START 0xFFFFFF8000000000
