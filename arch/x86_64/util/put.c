@@ -1,4 +1,5 @@
-#include <util/printk.h>
+#include <util/put.h>
+#include <util/compiler.h>
 #include <types.h>
 
 #define COM 0x03F8 /* COM1 port address */
@@ -130,17 +131,16 @@ init_serial(void) {
   fcr.fifo_dma_mode = FIFO_DMA_MODE_0;
   fcr.fifo_size = FIFO_SIZE_14B;
   outb(FCR, fcr.raw);
+
+  serial_initialized = TRUE;
 }
 
-void
-printk(const char* msg) {
-  if (!serial_initialized)
+void putc(char c) {
+  union lsr lsr;
+  if (unlikely(!serial_initialized))
     init_serial();
-  while (*msg != '\0') {
-    union lsr lsr;
-    do {
-      lsr.raw = inb(LSR);
-    } while (!lsr.thr_is_empty_and_idle);
-    outb(THR, *(msg++));
-  }
+  do
+    lsr.raw = inb(LSR);
+  while (!lsr.thr_is_empty_and_idle);
+  outb(THR, c);
 }
