@@ -131,7 +131,7 @@ split_free_block_at_size(struct header* block, size_t sz) {
   block->size = sz;
 }
 
-void*
+ptr_t
 mm_alloc(size_t sz) {
   struct header* hdr;
   /* the size of the block is the size of the allocation
@@ -192,15 +192,15 @@ find_most_aligned(size_t sz, size_t al) {
   return last_block;
 }
 
-void*
+ptr_t
 mm_aligned_alloc(size_t sz, size_t al) {
-  void* ptr;
+  ptr_t ptr;
   size_t actual_size;
   struct header *hdr, **hdr_ptr;
   /* find the header with the least amount of space wasted on alignment */
   hdr = find_most_aligned(sz, al);
   /* compute the data pointer */
-  ptr = (void*)ALIGN_UP((addr_t)(hdr + 1), al);
+  ptr = (ptr_t)ALIGN_UP((addr_t)(hdr + 1), al);
   /* if needed, insert pointer to the header before the data pointer */
   if ((addr_t)ptr > (addr_t)(hdr + 1)) {
     hdr_ptr = (struct header**)ptr - 1;
@@ -239,7 +239,7 @@ join_free_backwards(struct header* this) {
 }
 
 void
-mm_free(void* alloc) {
+mm_free(ptr_t alloc) {
   struct header* hdr = (struct header*)alloc - 1;
   if (!ISHEADER(hdr)) {
     /* assume the allocation is aligned */
