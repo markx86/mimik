@@ -3,7 +3,8 @@
 
 void putc(char c);
 
-static inline void puts(const char* s) {
+static inline void
+puts(const char* s) {
   while (*s != '\0')
     putc(*(s++));
 }

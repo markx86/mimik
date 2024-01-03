@@ -135,7 +135,8 @@ init_serial(void) {
   serial_initialized = TRUE;
 }
 
-void putc(char c) {
+void
+putc(char c) {
   union lsr lsr;
   if (unlikely(!serial_initialized))
     init_serial();
