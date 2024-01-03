@@ -29,18 +29,3 @@ list_length(struct list* list) {
     ++len;
   return len;
 }
-
-static inline bool_t
-list_is_empty(struct list* list) {
-  return list == list->next;
-}
-
-static inline void
-list_join(struct list* list, struct list* other) {
-  if (list_is_empty(other))
-    return;
-  other->next->prev = list;
-  other->prev->next = list->next;
-  list->next->prev = other->prev;
-  list->next = other->next;
-}
