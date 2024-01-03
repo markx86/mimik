@@ -9,7 +9,7 @@
 #define BUF_SIZE 64
 
 struct print_flags {
-  bool_t is_long;
+  size_t number_size;
   size_t leading_zeros;
 };
 
@@ -65,12 +65,22 @@ print_ptr(ptr_t ptr, bool_t cap) {
   print_hex(sizeof(ptr_t) << 1, (addr_t)ptr, cap);
 }
 
+static void
+print_binary(size_t sz, uint64_t n) {
+  uint64_t mask;
+  sz <<= 3;
+  mask = 1 << (sz - 1);
+  for (; sz > 0; --sz, mask >>= 1)
+    putc(((mask & n) != 0) + '0');
+}
+
 void
 printk(const char* fmt, ...) {
   va_list ap;
   struct print_flags f = {0};
 
-#define next_int(t) (f.is_long ? va_arg(ap, t##64_t) : va_arg(ap, t##32_t))
+#define next_int(t) \
+  (f.number_size > sizeof(int) ? va_arg(ap, t##64_t) : va_arg(ap, t##32_t))
 
   va_start(ap, fmt);
 
@@ -80,14 +90,32 @@ printk(const char* fmt, ...) {
       continue;
     }
 
+    f.number_size = sizeof(int);
+    f.leading_zeros = 0;
+
   next_mod:
     switch (*(++fmt)) {
       case '%':
         putc('%');
         break;
       case 'l':
-        f.is_long = TRUE;
+        if (f.number_size < sizeof(size_t))
+          f.number_size <<= 1;
         goto next_mod;
+      case 'h':
+        if (f.number_size > 1)
+          f.number_size >>= 1;
+        goto next_mod;
+      case '0':
+        for (++fmt; *fmt >= '0' && *fmt <= '9'; ++fmt) {
+          f.leading_zeros *= 10;
+          f.leading_zeros += *fmt - '0';
+        }
+        --fmt;
+        goto next_mod;
+      case 'b':
+        print_binary(f.number_size, next_int(uint));
+        break;
       case 'd':
         print_decimal(f.leading_zeros, next_int(int));
         break;
@@ -108,18 +136,9 @@ printk(const char* fmt, ...) {
       case 'c':
         putc((char)va_arg(ap, int));
         break;
-      case '0':
-        for (++fmt; *fmt >= '0' && *fmt <= '9'; ++fmt) {
-          f.leading_zeros *= 10;
-          f.leading_zeros += *fmt - '0';
-        }
-        --fmt;
-        goto next_mod;
       default:
         break;
     }
-
-    mem_set(&f, 0, sizeof(struct print_flags));
   }
 
   va_end(ap);
