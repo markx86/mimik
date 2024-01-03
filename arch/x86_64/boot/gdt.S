@@ -1,17 +1,17 @@
 .section .entry.data, "aw", @progbits
 
-#define GDT_ENTRY(label, base, limit, access, flags) \
-gdt_##label:;                                        \
-  .short (limit) & 0xFFFF;                           \
-  .short (base) & 0xFFFF;                            \
-  .byte ((base) >> 16) & 0xFF;                       \
-  .byte (access);                                    \
-gdt_##label##_flags:;                                \
-  .byte ((flags) << 4) | (((limit) >> 16) & 0xF);    \
+#define GDTENTRY(label, base, limit, access, flags) \
+gdt_##label:;                                       \
+  .short (limit) & 0xFFFF;                          \
+  .short (base) & 0xFFFF;                           \
+  .byte ((base) >> 16) & 0xFF;                      \
+  .byte (access);                                   \
+gdt_##label##_flags:;                               \
+  .byte ((flags) << 4) | (((limit) >> 16) & 0xF);   \
   .byte ((base) >> 24) & 0xFF
-#define GDT_SYSENTRY(label, base, limit, access, flags) \
-  GDT_ENTRY(label, base, limit, access, flags);         \
-  .long (base) >> 32;                                   \
+#define GDTSYSENTRY(label, base, limit, access, flags) \
+  GDTENTRY(label, base, limit, access, flags);         \
+  .long (base) >> 32;                                  \
   .long 0
 
 #define ACCESS_PRESENT (1 << 7)
@@ -26,7 +26,7 @@ gdt_##label##_flags:;                                \
 
 gdt:
   /* define null segment */
-  GDT_ENTRY(
+  GDTENTRY(
     null,
     0,
     0,
@@ -38,7 +38,7 @@ gdt:
    *         executable and readable
    * flags: has 4kB granularity, is a protected mode segment
    */
-  GDT_ENTRY(
+  GDTENTRY(
     kernel_code,
     0x0000000000000000,
     0xFFFFF,
@@ -55,7 +55,7 @@ gdt:
    *         not executable and writable
    * flags: has 4kB granularity, is a protected mode segment
    */
-  GDT_ENTRY(
+  GDTENTRY(
     kernel_data,
     0x0000000000000000,
     0xFFFFF,
@@ -71,7 +71,7 @@ gdt:
    *         executable and readable
    * flags: has 4kB granularity, is a protected mode segment
    */
-  GDT_ENTRY(
+  GDTENTRY(
     user_code,
     0x0000000000000000,
     0xFFFFF,
@@ -88,7 +88,7 @@ gdt:
    *         not executable and writable
    * flags: has 4kB granularity, is a protected mode segment
    */
-  GDT_ENTRY(
+  GDTENTRY(
     user_data,
     0x0000000000000000,
     0xFFFFF,
@@ -129,7 +129,7 @@ reload32:
   movw %ax, %ss
   ret
 
-#define update_flags(label)         \
+#define UPDATEFLAGS(label)          \
   movl (gdt_##label##_flags), %eax; \
   orl $(FLAGS_LONGMODE << 4), %eax; \
   movl %eax, (gdt_##label##_flags)
@@ -137,10 +137,10 @@ reload32:
 /* updates the gdt to work with long mode */
 .global edit_gdt
 edit_gdt:
-  update_flags(kernel_code)
-  update_flags(kernel_data)
-  update_flags(user_code)
-  update_flags(user_data)
+  UPDATEFLAGS(kernel_code)
+  UPDATEFLAGS(kernel_data)
+  UPDATEFLAGS(user_code)
+  UPDATEFLAGS(user_data)
   /* flush the instruction cache and jump into 64 bit long mode code */
   jmp $GDT_KERNEL_CS,$reload64
 

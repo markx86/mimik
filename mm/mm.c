@@ -162,7 +162,7 @@ find_most_aligned(size_t sz, size_t al) {
       goto next_block;
     /* compute the offset of the aligned pointer from the end of the header */
     offset = (addr_t)(hdr + 1);
-    offset = ALIGN_UP(offset, al) - offset;
+    offset = ALIGNUP(offset, al) - offset;
     /* compute the block size needed */
     needed_size = sz + offset;
     if (offset == 0)
@@ -200,7 +200,7 @@ mm_aligned_alloc(size_t sz, size_t al) {
   /* find the header with the least amount of space wasted on alignment */
   hdr = find_most_aligned(sz, al);
   /* compute the data pointer */
-  ptr = (ptr_t)ALIGN_UP((addr_t)(hdr + 1), al);
+  ptr = (ptr_t)ALIGNUP((addr_t)(hdr + 1), al);
   /* if needed, insert pointer to the header before the data pointer */
   if ((addr_t)ptr > (addr_t)(hdr + 1)) {
     hdr_ptr = (struct header**)ptr - 1;

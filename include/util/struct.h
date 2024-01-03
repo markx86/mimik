@@ -3,9 +3,9 @@
 
 #include <types.h>
 
-#define typeof __typeof__
-#define offsetof(type, member) ((size_t) & ((type*)NULL)->member)
-#define containerof(ptr, type, member) \
-  ((type*)(((char*)ptr) - offsetof(type, member)))
+#define TYPEOF(elem) __typeof__((elem))
+#define OFFSETOF(type, member) ((size_t) & ((type*)NULL)->member)
+#define CONTAINEROF(ptr, type, member) \
+  ((type*)(((char*)ptr) - OFFSETOF(type, member)))
 
 #endif

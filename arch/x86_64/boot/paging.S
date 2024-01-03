@@ -1,15 +1,15 @@
 .section .entry.bss, "aw", @nobits
 
 #define SIZE_4KB 0x1000
-#define DEFINE_PT(name) \
+#define DEFINEPT(name) \
   .align SIZE_4KB      ;\
   name:                ;\
     .skip SIZE_4KB
 
-DEFINE_PT(pml4)
-DEFINE_PT(pdp)
-DEFINE_PT(pd)
-DEFINE_PT(pt)
+DEFINEPT(pml4)
+DEFINEPT(pdp)
+DEFINEPT(pd)
+DEFINEPT(pt)
 
 .section .entry.data, "aw", @progbits
 /* shut the compiler up */

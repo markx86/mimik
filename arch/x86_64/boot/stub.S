@@ -5,19 +5,19 @@ stack_bottom:
 stack_top:
 #define STACK (stack_top-8)
 
-#define BOOTINFO_ENTRY(name, asm) \
+#define BOOTINFOENTRY(name, asm) \
   .global name;                   \
   name: asm
 #define C ,
 .section .entry.data, "aw", @progbits
 .align 8
 _bootinfo:
-  BOOTINFO_ENTRY(_bootinfo_cmdline, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_modules, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_mem_map_entries, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_mem_map_segments, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_acpi_type, .quad 0)
-  BOOTINFO_ENTRY(_bootinfo_acpi_struct, .fill 40 C 1 C 0)
+  BOOTINFOENTRY(_bootinfo_cmdline, .quad 0)
+  BOOTINFOENTRY(_bootinfo_modules, .quad 0)
+  BOOTINFOENTRY(_bootinfo_mem_map_entries, .quad 0)
+  BOOTINFOENTRY(_bootinfo_mem_map_segments, .quad 0)
+  BOOTINFOENTRY(_bootinfo_acpi_type, .quad 0)
+  BOOTINFOENTRY(_bootinfo_acpi_struct, .fill 40 C 1 C 0)
 #undef C
 
 .section .entry.text, "ax"

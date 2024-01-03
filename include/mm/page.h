@@ -9,7 +9,7 @@
 #define PAGES(b) ((b + PAGE_SIZE - 1) / PAGE_SIZE)
 #define BYTES(p) ((p) * PAGE_SIZE)
 
-#define PAGEALIGN_UP(addr) ALIGN_UP(addr, PAGE_SIZE)
-#define PAGEALIGN_DOWN(addr) ALIGN_DOWN(addr, PAGE_SIZE)
+#define PAGEALIGNUP(addr) ALIGNUP(addr, PAGE_SIZE)
+#define PAGEALIGNDOWN(addr) ALIGNDOWN(addr, PAGE_SIZE)
 
 #endif

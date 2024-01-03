@@ -14,12 +14,12 @@ void list_remove(struct list* elem);
 size_t list_length(struct list* list);
 
 #define list_for_each(pos, head, link)                      \
-  for (pos = containerof((head)->next, typeof(*pos), link); \
+  for (pos = CONTAINEROF((head)->next, TYPEOF(*pos), link); \
        &pos->link != (head);                                \
-       pos = containerof(pos->link.next, typeof(*pos), link))
+       pos = CONTAINEROF(pos->link.next, TYPEOF(*pos), link))
 #define list_for_each_reverse(pos, head, link)              \
-  for (pos = containerof((head)->prev, typeof(*pos), link); \
+  for (pos = CONTAINEROF((head)->prev, TYPEOF(*pos), link); \
        &pos->link != (head);                                \
-       pos = containerof(pos->link.prev, typeof(*pos), link))
+       pos = CONTAINEROF(pos->link.prev, TYPEOF(*pos), link))
 
 #endif

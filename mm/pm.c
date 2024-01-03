@@ -33,7 +33,7 @@ static addr_t next_bitmap_page;
 static struct mem_bitmap mem_bitmap0;
 static char mem_bitmap0_page[BITMAP_BYTES];
 
-#define TOBITMP(a) ((a) >> 27)
+#define TOBITMAP(a) ((a) >> 27)
 #define TOINDEX(a) (((a) & 0x7FFF000) / PAGE_SIZE)
 #define TOPADDR(b, i) (((b) << 27) + (i) * PAGE_SIZE)
 
@@ -44,7 +44,7 @@ compute_mem_size(struct bootinfo_mem_map* mem_map) {
     struct bootinfo_mem_segment* segment = &mem_map->segments[i];
     mem_info.free += segment->length;
     if (segment->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED &&
-        TOBITMP(segment->addr) == 0)
+        TOBITMAP(segment->addr) == 0)
       pm_try_lock_pages(segment->addr, segment->length);
   }
 }
@@ -93,7 +93,7 @@ pm_request_pages(size_t num) {
     err = bitmap_get(&mem_bitmap->super, index);
     if (ISERROR(err)) {
       ASSERT(err == -EINVAL);
-      next = containerof(mem_bitmap->link.next, struct mem_bitmap, link);
+      next = CONTAINEROF(mem_bitmap->link.next, struct mem_bitmap, link);
       if (next->index - mem_bitmap->index > 1) {
         found = 0;
         index = next->index * BITMAP_SIZE;
@@ -116,7 +116,7 @@ pm_request_pages(size_t num) {
 
 addr_t
 pm_request_bytes(size_t bytes) {
-  return pm_request_pages(PAGEALIGN_UP(bytes) / PAGE_SIZE);
+  return pm_request_pages(PAGEALIGNUP(bytes) / PAGE_SIZE);
 }
 
 static struct mem_bitmap*
@@ -180,7 +180,7 @@ try_set_page(addr_t paddr, bool_t state) {
   struct mem_bitmap* mem_bitmap;
   status_t sts;
   size_t bitmap, index;
-  bitmap = TOBITMP(paddr);
+  bitmap = TOBITMAP(paddr);
   mem_bitmap = find_bitmap_by_index(bitmap);
   if (mem_bitmap == NULL)
     mem_bitmap = create_bitmap(bitmap);
@@ -192,7 +192,7 @@ try_set_page(addr_t paddr, bool_t state) {
 bool_t
 pm_try_lock_page(addr_t paddr) {
   if (try_set_page(paddr, BITMAP_PAGELOCKED)) {
-    size_t bitmap = TOBITMP(paddr);
+    size_t bitmap = TOBITMAP(paddr);
     if (first_free_bitmap->index == bitmap && !find_first_free_index())
       find_first_free_bitmap();
     mem_info.used += PAGE_SIZE;
@@ -225,7 +225,7 @@ pm_try_lock_pages_range(addr_t paddr_start, addr_t paddr_end) {
 bool_t
 pm_try_release_page(addr_t paddr) {
   if (try_set_page(paddr, BITMAP_PAGEFREE)) {
-    size_t index, bitmap = TOBITMP(paddr);
+    size_t index, bitmap = TOBITMAP(paddr);
     if (bitmap < first_free_bitmap->index)
       first_free_bitmap = find_bitmap_by_index(bitmap);
     if (bitmap == first_free_bitmap->index &&

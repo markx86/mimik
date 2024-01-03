@@ -42,7 +42,7 @@ union vaddr {
 #define PT_NUM_LEVELS 4
 #define PT_LAST_LEVEL (PT_NUM_LEVELS - 1)
 
-#define PTE_PADDR(pte) ((pte)->bytes & 0x000FFFFFFFFFF000)
+#define PTEPADDR(pte) ((pte)->bytes & 0x000FFFFFFFFFF000)
 
 #define ISFLAGSET(flags, flag) ((flags & VM_MAP_##flag) != 0)
 #define ISFLAGUNSET(flags, flag) ((flags & VM_MAP_##flag) == 0)
@@ -121,7 +121,7 @@ vm_init(void) {
   pt = pml4;
   for (size_t i = 0; i < PT_LAST_LEVEL; ++i) {
     if (pt->entries[*indices].present && pt != &tmp_pt)
-      pt = (struct pt*)(PTE_PADDR(&pt->entries[*indices]) + HIGHER_HALF);
+      pt = (struct pt*)(PTEPADDR(&pt->entries[*indices]) + HIGHER_HALF);
     else {
       set_pte(
           &pt->entries[*indices],
@@ -197,7 +197,7 @@ next_free_entry:
       goto retry_loop;
     }
 
-    pt_vaddr = map_page_tmp(PTE_PADDR(&pt->entries[*index]), VM_MAP_WRITABLE);
+    pt_vaddr = map_page_tmp(PTEPADDR(&pt->entries[*index]), VM_MAP_WRITABLE);
     res = find_space((struct pt*)pt_vaddr, index + 1, level + 1, pages, strict);
     unmap_page_tmp(pt_vaddr);
     if (ISERROR(res)) {
@@ -256,7 +256,7 @@ recurse_map(
     if (!pt->entries[i].present)
       pt_vaddr = create_pt(pt, i);
     else
-      pt_vaddr = map_page_tmp(PTE_PADDR(&pt->entries[i]), VM_MAP_WRITABLE);
+      pt_vaddr = map_page_tmp(PTEPADDR(&pt->entries[i]), VM_MAP_WRITABLE);
     update_pt_pte_flags(pt, i, flags);
     res = recurse_map(
         (struct pt*)pt_vaddr,
@@ -335,7 +335,7 @@ recurse_unmap(struct pt* pt, size_t* index, size_t level, size_t pages) {
       entry->bytes = 0;
       ++unmapped_pages;
     } else if (entry->present) {
-      pt_vaddr = map_page_tmp(PTE_PADDR(entry), VM_MAP_WRITABLE);
+      pt_vaddr = map_page_tmp(PTEPADDR(entry), VM_MAP_WRITABLE);
       unmapped_pages +=
           recurse_unmap((struct pt*)pt_vaddr, index + 1, level + 1, pages);
       unmap_page_tmp(pt_vaddr);
@@ -382,11 +382,11 @@ recurse_find(struct pt* pt, size_t* index, size_t level, addr_t* paddr) {
   if (!entry->present)
     return -ENOMAP;
   else if (level == PT_LAST_LEVEL) {
-    *paddr = PTE_PADDR(entry);
+    *paddr = PTEPADDR(entry);
     return SUCCESS;
   }
 
-  pt_vaddr = map_page_tmp(PTE_PADDR(entry), VM_MAP_WRITABLE);
+  pt_vaddr = map_page_tmp(PTEPADDR(entry), VM_MAP_WRITABLE);
   res = recurse_find((struct pt*)pt_vaddr, index + 1, level + 1, paddr);
   unmap_page_tmp(pt_vaddr);
 
