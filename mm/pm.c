@@ -6,7 +6,6 @@
 #include <structs/list.h>
 #include <util/mem.h>
 #include <assert.h>
-#include <errors.h>
 #include <kernel.h>
 
 #define BITMAP_BYTES PAGE_SIZE

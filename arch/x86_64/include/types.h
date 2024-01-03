@@ -1,6 +1,8 @@
 #ifndef MIMIK_TYPES_H
 #define MIMIK_TYPES_H
 
+#include <errors.h>
+
 typedef char int8_t;
 #define INT8_MIN 0x80
 #define INT8_MAX (~INT8_MIN)

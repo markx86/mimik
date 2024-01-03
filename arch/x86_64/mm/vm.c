@@ -3,7 +3,6 @@
 #include <mm/page.h>
 #include <util/mem.h>
 #include <util/compiler.h>
-#include <errors.h>
 #include <types.h>
 #include <assert.h>
 
