@@ -2,9 +2,11 @@
 #define MIMIK_KERNEL_H
 
 #include <bootinfo.h>
+#include <util/initfs.h>
 
 struct kernel_config {
   struct bootinfo* bootinfo;
+  struct initfs fs;
 };
 
 extern struct kernel_config kcfg;

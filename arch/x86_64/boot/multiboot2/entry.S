@@ -99,27 +99,25 @@ parse_next_tag:
    *       upper 32 bits second. This is a recurring thing in this function.
    */
   /* write lower 32 bits */
-  movl $0, (%ebx)
-  addl $4, %ebx
+  movl $0, 0(%ebx)
   /* write upper 32 bits */
-  movl $0, (%ebx)
-  addl $4, %ebx
+  movl $0, 4(%ebx)
   /* bootinfo_module.start_address */
-  movl (%edx), %eax
-  addl $4, %edx
-  movl %eax, (%ebx)
-  addl $4, %ebx
-  movl $0, (%ebx)
-  addl $4, %ebx
+  movl 0(%edx), %eax
+  movl %eax, 8(%ebx)
+  movl $0, 12(%ebx)
   /* bootinfo_module.end_address */
-  movl (%edx), %eax
-  addl $4, %edx
-  movl %eax, (%ebx)
-  addl $4, %ebx
-  movl $0, (%ebx)
-  addl $4, %ebx
+  movl 4(%edx), %eax
+  movl %eax, 16(%ebx)
+  movl $0, 20(%ebx)
+  /* set bootinfo_module.cmdline[0] to 0 */
+  movl $0, 24(%ebx) /* NOTE: store a 32-bit number for alignment */
   /* bootinfo_module.cmdline */
+  addl $32, %ebx
+  addl $8, %edx
   subl $8, %ecx
+  cmpl $0, %ecx
+  je next_tag
 3:
   movb (%edx), %al
   incl %edx

@@ -7,9 +7,16 @@
 struct kernel_config kcfg;
 
 static void
-parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
-  struct bootinfo_module* module;
+find_free_mem_ptr(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
+  for (struct bootinfo_module* module = bootinfo->modules; module != NULL;
+       module = module->next) {
+    if (module->end_address > *free_mem_ptr)
+      *free_mem_ptr = module->end_address;
+  }
+}
 
+static void
+parse_bootinfo(struct bootinfo* bootinfo) {
   kcfg.bootinfo = bootinfo;
 
   /* Parse cmdline. */
@@ -17,9 +24,11 @@ parse_bootinfo(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
   }
 
   /* Find modules. */
-  for (module = bootinfo->modules; module != NULL; module = module->next) {
-    if (module->end_address > *free_mem_ptr)
-      *free_mem_ptr = module->end_address;
+  for (struct bootinfo_module* module = bootinfo->modules; module != NULL;
+       module = module->next) {
+    kcfg.fs = initfs_from_module(module);
+    /* TODO: support other modules */
+    break;
   }
 }
 
@@ -29,9 +38,10 @@ kernel_main(
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {
   addr_t free_mem_ptr = bootinfo_data_end;
-  parse_bootinfo(bootinfo, &free_mem_ptr);
+  find_free_mem_ptr(bootinfo, &free_mem_ptr);
   pm_init(free_mem_ptr);
   vm_init();
   mm_init();
+  parse_bootinfo(bootinfo);
   ASSERT(0 && "Hello from MIMIK!");
 }

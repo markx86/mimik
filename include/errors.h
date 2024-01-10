@@ -5,7 +5,8 @@ enum error {
   EINVAL = 1,
   EOVERLAP,
   EFULL,
-  ENOMAP
+  ENOMAP,
+  ENOENT
 };
 
 #endif
