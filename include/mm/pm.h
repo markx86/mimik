@@ -11,10 +11,12 @@ addr_t pm_request_bytes(size_t bytes);
 
 bool_t pm_try_lock_page(addr_t paddr);
 bool_t pm_try_lock_pages(addr_t paddr_start, size_t bytes);
-bool_t pm_try_lock_pages_range(addr_t paddr_start, addr_t paddr_end);
+#define pm_try_lock_range(paddr_start, paddr_end) \
+  pm_try_lock_pages(paddr_start, paddr_end - paddr_start)
 
 bool_t pm_try_release_page(addr_t paddr);
 bool_t pm_try_release_pages(addr_t paddr_start, size_t bytes);
-bool_t pm_try_release_pages_range(addr_t paddr_start, addr_t paddr_end);
+#define pm_try_release_range(paddr_start, paddr_end) \
+  pm_try_release_pages(paddr_start, paddr_end - paddr_start)
 
 #endif

@@ -63,7 +63,7 @@ void
 pm_init(addr_t free_mem_ptr) {
   init_first_bitmap();
   compute_mem_size(&kcfg.bootinfo->mem_map);
-  pm_try_lock_pages_range(KERNEL_START_PADDR, KERNEL_END_PADDR);
+  pm_try_lock_range(KERNEL_START_PADDR, KERNEL_END_PADDR);
   next_bitmap_page = pm_request_page();
 }
 
@@ -218,11 +218,6 @@ pm_try_lock_pages(addr_t paddr, size_t bytes) {
 }
 
 bool_t
-pm_try_lock_pages_range(addr_t paddr_start, addr_t paddr_end) {
-  return pm_try_lock_pages(paddr_start, paddr_end - paddr_start);
-}
-
-bool_t
 pm_try_release_page(addr_t paddr) {
   if (try_set_page(paddr, BITMAP_PAGEFREE)) {
     size_t index, bitmap = TOBITMAP(paddr);
@@ -251,9 +246,4 @@ pm_try_release_pages(addr_t paddr, size_t bytes) {
     paddr += PAGE_SIZE;
   }
   return no_collisions;
-}
-
-bool_t
-pm_try_release_pages_range(addr_t paddr_start, addr_t paddr_end) {
-  return pm_try_release_pages(paddr_start, paddr_end - paddr_start);
 }
