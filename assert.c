@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <util/printk.h>
+#include <log/printk.h>
 
 void
 _assert(const char* file, size_t line, const char* expr) {
@@ -12,7 +12,7 @@ _assert(const char* file, size_t line, const char* expr) {
     ++file;
   }
 
-  printk("[%s @ %lu] Assertion failed: %s\n", last_path_sep + 1, line, expr);
+  printk("[%s:%lu] Assertion failed: %s\n", last_path_sep + 1, line, expr);
 
   while (TRUE)
     __asm__("hlt");

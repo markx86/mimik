@@ -1,4 +1,4 @@
-#include <util/str.h>
+#include <mem/str.h>
 #include <assert.h>
 
 size_t

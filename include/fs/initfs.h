@@ -1,7 +1,7 @@
 #ifndef MIMIK_INITFS_H
 #define MIMIK_INITFS_H
 
-#include <bootinfo.h>
+#include <boot/bootinfo.h>
 
 struct initfs {
   addr_t virt_start;

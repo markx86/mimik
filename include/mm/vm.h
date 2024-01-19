@@ -1,8 +1,8 @@
 #ifndef MIMIK_VM_H
 #define MIMIK_VM_H
 
-#include <bootinfo.h>
-#include <mm/page.h>
+#include <boot/bootinfo.h>
+#include <mem/page.h>
 
 enum vm_map_flags {
   VM_MAP_STRICT = 1 << 0,

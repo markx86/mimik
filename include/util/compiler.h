@@ -11,6 +11,8 @@
 #define va_end __builtin_va_end
 #define va_arg __builtin_va_arg
 
+#define asm __asm__
+
 #define PACKED attributes(packed)
 #define ALIGNED(s) attributes(aligned(s))
 

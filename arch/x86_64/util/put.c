@@ -1,4 +1,4 @@
-#include <util/put.h>
+#include <log/put.h>
 #include <util/compiler.h>
 #include <types.h>
 
@@ -94,13 +94,13 @@ static bool_t serial_initialized = FALSE;
 
 static inline void
 outb(uint16_t port, uint8_t b) {
-  __asm__("outb %%al, %%dx" : : "al"(b), "dx"(port));
+  asm("outb %%al, %%dx" : : "al"(b), "dx"(port));
 }
 
 static inline uint8_t
 inb(uint16_t port) {
   uint8_t b;
-  __asm__("inb %%dx, %%al" : "=ax"(b) : "dx"(port));
+  asm("inb %%dx, %%al" : "=ax"(b) : "dx"(port));
   return b;
 }
 

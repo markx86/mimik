@@ -2,6 +2,7 @@
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <mm/mm.h>
+#include <cpu/gdt.h>
 #include <assert.h>
 
 struct kernel_config kcfg;
@@ -38,6 +39,7 @@ kernel_main(
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {
   addr_t free_mem_ptr = bootinfo_data_end;
+  gdt_load();
   find_free_mem_ptr(bootinfo, &free_mem_ptr);
   pm_init(free_mem_ptr);
   vm_init();

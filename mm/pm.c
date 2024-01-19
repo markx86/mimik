@@ -1,10 +1,10 @@
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <mm/mm.h>
-#include <mm/page.h>
+#include <mem/page.h>
 #include <structs/bitmap.h>
 #include <structs/list.h>
-#include <util/mem.h>
+#include <mem/mem.h>
 #include <assert.h>
 #include <kernel.h>
 

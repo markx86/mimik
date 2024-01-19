@@ -43,7 +43,7 @@ _stub32:
   /* copy the bootinfo data end address as it's needed in setup_paging */
   pushl %eax
   /* load GDT */
-  call load_gdt
+  call load_boot_gdt
   /* check if the required features are supported */
   call check_feature_support
   /* setup paging */
@@ -52,7 +52,7 @@ _stub32:
   /* enable features and long mode */
   call enable_features
   /* edit gdt */
-  call edit_gdt
+  call edit_boot_gdt
   jmp _fail
 
 .global _fail
@@ -163,7 +163,7 @@ _stub64:
   movq $(STACK+HIGHER_HALF), %rsp
   movq %rsp, %rbp
   /* set the fail address */
-  movq $_fail+HIGHER_HALF, (%rsp)
+  movq $(_fail+HIGHER_HALF), (%rsp)
   /* make every pointer in _bootinfo a higher half pointer */
   addq $HIGHER_HALF, (_bootinfo+0)
   addq $HIGHER_HALF, (_bootinfo+24)

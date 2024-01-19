@@ -1,7 +1,7 @@
-#include <util/initfs.h>
+#include <fs/initfs.h>
 #include <util/compiler.h>
-#include <util/str.h>
-#include <util/mem.h>
+#include <mem/str.h>
+#include <mem/mem.h>
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <assert.h>

@@ -1,7 +1,7 @@
-#include <util/printk.h>
-#include <util/put.h>
+#include <log/printk.h>
+#include <log/put.h>
 #include <util/compiler.h>
-#include <util/mem.h>
+#include <mem/mem.h>
 #include <assert.h>
 #include <types.h>
 #include <kernel.h>
@@ -114,7 +114,7 @@ printk(const char* fmt, ...) {
         --fmt;
         goto next_mod;
       case 'b':
-        print_binary(f.number_size, next_int(uint));
+        print_binary(f.leading_zeros != 0 ? f.leading_zeros : f.number_size, next_int(uint));
         break;
       case 'd':
         print_decimal(f.leading_zeros, next_int(int));

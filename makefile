@@ -38,7 +38,8 @@ QEMUFLAGS = \
 	-m 128M									\
 	-vga std								\
 	-serial stdio							\
-	-kernel $(TARGET)
+	-kernel $(TARGET)						\
+	-initrd $(SOURCEDIR)/initrd.tar
 QEMUGDBFLAGS = -s -S -d guest_errors,cpu_reset,int -no-reboot -no-shutdown
 GDBFLAGS = \
 	-ex "target remote localhost:1234"			\
@@ -56,8 +57,8 @@ else
 GCCFLAGS += -Werror
 endif
 
-OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
-OBJECTS := $(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%.o,$(OBJECTS))
+OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%_c.o,$(SOURCES))
+OBJECTS := $(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%_S.o,$(OBJECTS))
 
 .PHONY: run debug clean fmt
 
@@ -78,11 +79,11 @@ clean:
 fmt:
 	clang-format -i $(shell find $(SOURCEDIR) -name '*.c' -or -name '*.h' -type f)
 
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.c
+$(BUILDDIR)/%_c.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(GCC) $(GCCFLAGS) $(DEFINES) -c $< -o $@
 	
-$(BUILDDIR)/%.o: $(SOURCEDIR)/%.S
+$(BUILDDIR)/%_S.o: $(SOURCEDIR)/%.S
 	@mkdir -p $(dir $@)
 	$(GCC) $(GCCFLAGS) $(DEFINES) -c $< -o $@
 

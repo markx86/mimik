@@ -1,7 +1,7 @@
 #include <mm/vm.h>
 #include <mm/pm.h>
-#include <mm/page.h>
-#include <util/mem.h>
+#include <mem/page.h>
+#include <mem/mem.h>
 #include <util/compiler.h>
 #include <types.h>
 #include <assert.h>
@@ -58,13 +58,13 @@ static struct pt ALIGNED(PT_SIZE) tmp_pt;
 static inline addr_t
 get_pml4_paddr(void) {
   addr_t paddr;
-  __asm__("movq %%cr3, %0" : "=r"(paddr));
+  asm("movq %%cr3, %0" : "=r"(paddr));
   return paddr;
 }
 
 static inline void
 invalidate_page(addr_t vaddr) {
-  __asm__("invlpg (%0)" : "=r"(vaddr));
+  asm("invlpg (%0)" : "=r"(vaddr));
 }
 
 static inline void
@@ -139,8 +139,8 @@ vm_init(void) {
 
 void
 vm_flush_tlb(void) {
-  __asm__("movq %%cr3, %%rax" : : : "rax");
-  __asm__("movq %%rax, %%cr3" : : : "rax");
+  asm("movq %%cr3, %%rax" : : : "rax");
+  asm("movq %%rax, %%cr3" : : : "rax");
 }
 
 static addr_t

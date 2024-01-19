@@ -1,5 +1,5 @@
 #include <structs/bitmap.h>
-#include <util/mem.h>
+#include <mem/mem.h>
 
 struct bitmap
 bitmap_from(size_t sz, ptr_t ptr) {

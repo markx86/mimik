@@ -1,33 +1,11 @@
+#include <cpu/gdt.h>
+
 .section .entry.data, "aw", @progbits
 
-#define GDTENTRY(label, base, limit, access, flags) \
-gdt_##label:;                                       \
-  .short (limit) & 0xFFFF;                          \
-  .short (base) & 0xFFFF;                           \
-  .byte ((base) >> 16) & 0xFF;                      \
-  .byte (access);                                   \
-gdt_##label##_flags:;                               \
-  .byte ((flags) << 4) | (((limit) >> 16) & 0xF);   \
-  .byte ((base) >> 24) & 0xFF
-#define GDTSYSENTRY(label, base, limit, access, flags) \
-  GDTENTRY(label, base, limit, access, flags);         \
-  .long (base) >> 32;                                  \
-  .long 0
-
-#define ACCESS_PRESENT (1 << 7)
-#define ACCESS_PRIVILEGE_LEVEL(l) (((l) & 0b11) << 5)
-#define ACCESS_NORMAL_SEGMENT (1 << 4)
-#define ACCESS_EXECUTABLE (1 << 3)
-#define ACCESS_READWRITE (1 << 1)
-
-#define FLAGS_GRANULARITY (1 << 3)
-#define FLAGS_PROTECTEDMODE (1 << 2)
-#define FLAGS_LONGMODE (1 << 1)
-
-gdt:
+boot_gdt:
   /* define null segment */
   GDTENTRY(
-    null,
+    boot_null,
     0,
     0,
     0,
@@ -39,12 +17,12 @@ gdt:
    * flags: has 4kB granularity, is a protected mode segment
    */
   GDTENTRY(
-    kernel_code,
+    boot_code,
     0x0000000000000000,
     0xFFFFF,
     ACCESS_PRESENT +
-    ACCESS_PRIVILEGE_LEVEL(0) +
-    ACCESS_NORMAL_SEGMENT +
+    ACCESS_PRIVILEGELEVEL(0) +
+    ACCESS_NORMALSEGMENT +
     ACCESS_EXECUTABLE +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
@@ -56,72 +34,35 @@ gdt:
    * flags: has 4kB granularity, is a protected mode segment
    */
   GDTENTRY(
-    kernel_data,
+    boot_data,
     0x0000000000000000,
     0xFFFFF,
     ACCESS_PRESENT +
-    ACCESS_PRIVILEGE_LEVEL(0) +
-    ACCESS_NORMAL_SEGMENT +
+    ACCESS_PRIVILEGELEVEL(0) +
+    ACCESS_NORMALSEGMENT +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
     FLAGS_PROTECTEDMODE)
-  /*
-   * define kernel user segment with the following properties
-   * access: is present, privilege level 3, not a system segment,
-   *         executable and readable
-   * flags: has 4kB granularity, is a protected mode segment
-   */
-  GDTENTRY(
-    user_code,
-    0x0000000000000000,
-    0xFFFFF,
-    ACCESS_PRESENT +
-    ACCESS_PRIVILEGE_LEVEL(3) +
-    ACCESS_NORMAL_SEGMENT +
-    ACCESS_EXECUTABLE +
-    ACCESS_READWRITE,
-    FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE)
-  /*
-   * define user data segment with the following properties
-   * access: is present, privilege level 3, not a system segment,
-   *         not executable and writable
-   * flags: has 4kB granularity, is a protected mode segment
-   */
-  GDTENTRY(
-    user_data,
-    0x0000000000000000,
-    0xFFFFF,
-    ACCESS_PRESENT +
-    ACCESS_PRIVILEGE_LEVEL(3) +
-    ACCESS_NORMAL_SEGMENT +
-    ACCESS_READWRITE,
-    FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE)
-gdt_end:
+boot_gdt_end:
 
-#define GDT_KERNEL_CS (gdt_kernel_code-gdt)
-#define GDT_KERNEL_DS (gdt_kernel_data-gdt)
-#define GDT_USER_CS (gdt_user_code-gdt)
-#define GDT_USER_DS (gdt_user_data-gdt)
+#define BOOT_CS (_gdt_boot_code-_gdt_boot_null)
+#define BOOT_DS (_gdt_boot_data-_gdt_boot_null)
 
-/* gdtr for both protected mode and long mode */
 .align 4
-gdtr32:
-  .short (gdt_end-gdt)-1;
-  .long gdt
+boot_gdtr:
+  .short (boot_gdt_end-boot_gdt)-1;
+  .long boot_gdt
 
 .section .entry.text, "ax"
 .code32
 
 /* loads the proteced mode gdtr and reloads the segment registers */
-.global load_gdt
-load_gdt:
-  lgdtl (gdtr32)
-  jmp $GDT_KERNEL_CS,$reload32
-
-reload32:
-  movw $GDT_KERNEL_DS, %ax
+.global load_boot_gdt
+load_boot_gdt:
+  lgdtl (boot_gdtr)
+  jmp $BOOT_CS,$flush_instruction_cache
+flush_instruction_cache:
+  movw $BOOT_DS, %ax
   movw %ax, %ds
   movw %ax, %es
   movw %ax, %fs
@@ -129,25 +70,21 @@ reload32:
   movw %ax, %ss
   ret
 
-#define UPDATEFLAGS(label)          \
-  movl (gdt_##label##_flags), %eax; \
-  orl $(FLAGS_LONGMODE << 4), %eax; \
-  movl %eax, (gdt_##label##_flags)
+#define UPDATEFLAGS(label)            \
+  movl (_gdt_##label##_flags), %eax;  \
+  orl $(FLAGS_LONGMODE << 4), %eax;   \
+  movl %eax, (_gdt_##label##_flags)
 
-/* updates the gdt to work with long mode */
-.global edit_gdt
-edit_gdt:
-  UPDATEFLAGS(kernel_code)
-  UPDATEFLAGS(kernel_data)
-  UPDATEFLAGS(user_code)
-  UPDATEFLAGS(user_data)
+/* updates the gdt and switches to long mode */
+.global edit_boot_gdt
+edit_boot_gdt:
+  /* update the gdt to work with long mode addressing */
+  UPDATEFLAGS(boot_code)
+  UPDATEFLAGS(boot_data)
   /* flush the instruction cache and jump into 64 bit long mode code */
-  jmp $GDT_KERNEL_CS,$reload64
-
+  jmp $BOOT_CS,$far_return
 .code64
-reload64:
-  /* we reload the gdt to work with long mode addressing */
-  lgdtq (gdtr64)
+far_return:
   /*
    * NOTE: there's no need to reload the segment register's
    * since the gdt remains the same.
@@ -160,12 +97,6 @@ reload64:
    * half (_stub64) and with cs pointing to the kernel code segment
    */
   addq $4, %rsp
-  pushq $GDT_KERNEL_CS
-  movq $_stub64, %rax
-  pushq %rax
+  pushq $BOOT_CS
+  pushq $_stub64
   retfq
-
-.section .rodata, "a", @progbits
-gdtr64:
-  .short (gdt_end-gdt)-1
-  .quad (gdt+HIGHER_HALF)
