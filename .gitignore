@@ -3,3 +3,4 @@ build/
 .gdb_history
 compile_commands.json
 addr2inds
+initrd.tar
