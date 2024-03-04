@@ -3,6 +3,7 @@
 
 #include <boot/bootinfo.h>
 #include <fs/initfs.h>
+#include <log/log.h>
 
 struct kernel_config {
   struct bootinfo* bootinfo;

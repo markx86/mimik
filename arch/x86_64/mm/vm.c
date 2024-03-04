@@ -2,6 +2,7 @@
 #include <mm/pm.h>
 #include <mem/page.h>
 #include <mem/mem.h>
+#include <log/log.h>
 #include <util/compiler.h>
 #include <types.h>
 #include <assert.h>
@@ -135,6 +136,8 @@ vm_init(void) {
   for (first_free_tmp_index = 0; tmp_pt.entries[first_free_tmp_index].present;
        ++first_free_tmp_index)
     ;
+
+  LOGSUCCESS("virtual memory manager initialized");
 }
 
 void

@@ -16,6 +16,7 @@ find_free_mem_ptr(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
     if (module->end_address > *free_mem_ptr)
       *free_mem_ptr = module->end_address;
   }
+  LOGTRACE("free mem @ %p", *free_mem_ptr);
 }
 
 static void

@@ -3,6 +3,7 @@
 #include <mm/vm.h>
 #include <util/align.h>
 #include <util/compiler.h>
+#include <log/log.h>
 #include <assert.h>
 
 #define HEAP_START 0xFFFFFF8000000000
@@ -44,6 +45,7 @@ mm_init(void) {
   first_free->prev = NULL;
   last_block = first_free;
   heap_end = heap_start + first_free->size;
+  LOGSUCCESS("kernel heap initialized");
 }
 
 static void
