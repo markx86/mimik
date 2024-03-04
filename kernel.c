@@ -3,6 +3,8 @@
 #include <mm/vm.h>
 #include <mm/mm.h>
 #include <cpu/gdt.h>
+#include <cpu/int.h>
+#include <cpu/isr.h>
 #include <assert.h>
 
 struct kernel_config kcfg;
@@ -44,6 +46,9 @@ kernel_main(
   pm_init(free_mem_ptr);
   vm_init();
   mm_init();
+  isr_init();
+	/* TODO: initialize PIC and mask all interrupts */
+  int_enable();
   parse_bootinfo(bootinfo);
   ASSERT(0 && "Hello from MIMIK!");
 }

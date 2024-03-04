@@ -17,11 +17,13 @@ GCC = gcc
 LD = ld
 GDB = gdb
 QEMU = qemu-system-$(ARCH)
+CLANGFMT = clang-fmt
 
 DEFINES = \
 	-DMIMIK_ARCH_$(call uppercase, $(ARCH))
 GCCFLAGS = \
 	-ffreestanding 							\
+	-nostdinc								\
 	-mno-red-zone 							\
 	-mno-sse								\
 	-Wall 									\
@@ -30,7 +32,8 @@ GCCFLAGS = \
 	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
 	-I$(SOURCEDIR)/arch/$(ARCH)/include
-LDFLAGS = -nostdlib -z noexecstack
+LDFLAGS = \
+	-nostdlib
 QEMUFLAGS = \
 	-cpu qemu64								\
 	-smp cpus=1,cores=2,threads=2,maxcpus=4	\
@@ -77,7 +80,7 @@ clean:
 	rm -rf $(BUILDDIR)
 
 fmt:
-	clang-format -i $(shell find $(SOURCEDIR) -name '*.c' -or -name '*.h' -type f)
+	$(CLANGFMT) -i $(shell find $(SOURCEDIR) -name '*.c' -or -name '*.h' -type f)
 
 $(BUILDDIR)/%_c.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
