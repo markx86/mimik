@@ -1,7 +1,9 @@
 #ifndef MIMIK_BOOTINFO_H
 #define MIMIK_BOOTINFO_H
 
-#include <acpi.h>
+struct bootinfo_arch;
+
+#include <boot/bootinfo-arch.h>
 
 struct bootinfo_module {
   struct bootinfo_module* next;
@@ -29,22 +31,11 @@ struct bootinfo_mem_map {
   struct bootinfo_mem_segment* segments;
 };
 
-struct bootinfo_acpi {
-  union {
-    enum acpi_type type;
-    uint64_t force8;
-  };
-  union {
-    struct acpi_rsdp rsdp;
-    struct acpi_xsdp xsdp;
-  };
-};
-
 struct bootinfo {
   char* cmdline;
   struct bootinfo_module* modules;
   struct bootinfo_mem_map mem_map;
-  struct bootinfo_acpi acpi;
+  struct bootinfo_arch arch;
 };
 
 #endif
