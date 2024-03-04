@@ -1,18 +1,22 @@
 #include <assert.h>
-#include <log/printk.h>
+#include <log/log.h>
 
 void
 _assert(const char* file, size_t line, const char* expr) {
-  const char* last_path_sep = file;
+  const char *cur, *root, *this_file = __FILE__;
 
   /* TODO: replace this with something like strchrr, maybe? */
-  while (*file != '\0') {
-    if (*file == '/')
-      last_path_sep = file;
-    ++file;
+  cur = this_file;
+  while (*cur != '\0') {
+    if (*cur == '/')
+      root = cur + 1;
+    ++cur;
   }
+  file += (size_t)(root - this_file);
 
-  printk("[%s:%lu] Assertion failed: %s\n", last_path_sep + 1, line, expr);
+  printk(
+    "[" LOG_COLOR_FATAL "%s:%lu" LOG_COLOR_RESET "] Assertion failed: %s\n",
+    file, line, expr);
 
   while (TRUE)
     __asm__("hlt");
