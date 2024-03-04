@@ -50,7 +50,7 @@ static void
 grow_heap(size_t sz) {
   status_t res;
   addr_t paddr;
-  size_t pages = PAGES(sz);
+  size_t bytes, pages = PAGES(sz);
   pages = pages >= MIN_GROW_PAGES ? pages : MIN_GROW_PAGES;
   /* verify that the end of the last block in the heap,
            aligns with the end of the heap */
@@ -72,7 +72,9 @@ grow_heap(size_t sz) {
     last_block = new_block;
   }
   /* update the last block's size */
-  last_block->size += BYTES(pages);
+  bytes = BYTES(pages);
+  ASSERT(bytes < UINT32_MAX);
+  last_block->size += (uint32_t)bytes;
 }
 
 static struct header*
@@ -120,7 +122,7 @@ split_free_block_at_size(struct header* block, size_t sz) {
 
   /* initialize the new block */
   next->free = TRUE;
-  next->size = block->size - sz;
+  next->size = (uint32_t)(block->size - sz);
   ASSERT(next->size >= MIN_BLOCK_SIZE);
   next->magic[0] = HEADER_MAGIC0;
   next->magic[1] = HEADER_MAGIC1;
@@ -128,12 +130,13 @@ split_free_block_at_size(struct header* block, size_t sz) {
   next->prev = block;
 
   /* update the block size */
-  block->size = sz;
+  block->size = (uint32_t)sz;
 }
 
 ptr_t
 mm_alloc(size_t sz) {
   struct header* hdr;
+  ASSERT(sz <= UINT32_MAX);
   /* the size of the block is the size of the allocation
      plus the size of the block header */
   sz += sizeof(struct header);
@@ -197,6 +200,7 @@ mm_aligned_alloc(size_t sz, size_t al) {
   ptr_t ptr;
   size_t actual_size;
   struct header *hdr, **hdr_ptr;
+  ASSERT(sz <= UINT32_MAX);
   /* find the header with the least amount of space wasted on alignment */
   hdr = find_most_aligned(sz, al);
   /* compute the data pointer */

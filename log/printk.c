@@ -20,7 +20,7 @@ print_unsigned(size_t zeros, uint64_t n) {
   ASSERT(zeros <= sizeof(cs));
   for (i = 0; n > 0; n /= 10, ++i) {
     ASSERT(i < sizeof(cs));
-    cs[i] = n % 10 + '0';
+    cs[i] = (char)(n % 10) + '0';
   }
   for (size_t j = i; j < zeros; ++j)
     putc('0');
@@ -34,7 +34,7 @@ print_decimal(size_t zeros, int64_t n) {
     n = -n;
     putc('-');
   }
-  print_unsigned(zeros, n);
+  print_unsigned(zeros, (uint64_t)n);
 }
 
 static void
@@ -46,9 +46,9 @@ print_hex(size_t zeros, uint64_t n, bool_t cap) {
     ASSERT(i < sizeof(cs));
     uint8_t d = n & 0xF;
     if (d < 10)
-      cs[i] = d + '0';
+      cs[i] = (char)(d + '0');
     else
-      cs[i] = (d - 10) + base;
+      cs[i] = (char)(d - 10) + base;
   }
   for (size_t j = i; j < zeros; ++j)
     putc('0');
@@ -109,7 +109,7 @@ printk(const char* fmt, ...) {
       case '0':
         for (++fmt; *fmt >= '0' && *fmt <= '9'; ++fmt) {
           f.leading_zeros *= 10;
-          f.leading_zeros += *fmt - '0';
+          f.leading_zeros += (size_t)(*fmt - '0');
         }
         --fmt;
         goto next_mod;

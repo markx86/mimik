@@ -143,5 +143,5 @@ putc(char c) {
   do
     lsr.raw = inb(LSR);
   while (!lsr.thr_is_empty_and_idle);
-  outb(THR, c);
+  outb(THR, (uint8_t)c);
 }

@@ -80,7 +80,7 @@ static addr_t
 map_page_tmp(addr_t paddr, enum vm_map_flags flags) {
   union vaddr vaddr = {.address = PT_TMP_START_VADDR};
   ASSERT(first_free_tmp_index < PT_LENGTH);
-  vaddr.pt_index = first_free_tmp_index;
+  vaddr.pt_index = first_free_tmp_index & 0x1FF;
   set_pte(&tmp_pt.entries[vaddr.pt_index], paddr, flags);
   do {
     ++first_free_tmp_index;
@@ -206,9 +206,9 @@ next_free_entry:
       goto retry_loop;
     }
 
-    found_pages += res;
+    found_pages += (size_t)res;
     if (res >= pages)
-      return found_pages;
+      return (status_t)found_pages;
     if (index[1] < PT_LENGTH - 1) {
     retry_loop:
       ++i;
@@ -229,7 +229,7 @@ next_free_entry:
     goto next_free_entry;
   }
 
-  return found_pages;
+  return (status_t)found_pages;
 }
 
 static status_t
@@ -305,10 +305,12 @@ vm_map_pages(
   res = recurse_map(table, indices, 0, &paddr_start, &pages, flags);
 
   if (res == SUCCESS && vaddr_hint != NULL) {
-    vaddr_indices.pml4_index = indices[0];
-    vaddr_indices.pdp_index = indices[1];
-    vaddr_indices.pd_index = indices[2];
-    vaddr_indices.pt_index = indices[3];
+    vaddr_indices.pml4_index = indices[0] & 0x1FF;
+    vaddr_indices.pdp_index = indices[1] & 0x1FF;
+    vaddr_indices.pd_index = indices[2] & 0x1FF;
+    vaddr_indices.pt_index = indices[3] & 0x1FF;
+    if (indices[0] & 0x100)
+      vaddr_indices.address |= (addr_t)0xFFFF << 48;
     *vaddr_hint = vaddr_indices.address;
   }
 

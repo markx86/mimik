@@ -36,11 +36,12 @@ struct PACKED ustar_header {
 };
 
 static inline size_t
-str_to_num_oct(const char* str, size_t len) {
+oct_str_to_num(const char* str, size_t len) {
   size_t num = 0;
   while (--len > 0) {
     num <<= 3;
-    num += *(str++) - '0';
+    ASSERT(*str >= '0' && *str <= '7');
+    num += (size_t)(*(str++) - '0');
   }
   return num;
 }
@@ -81,7 +82,7 @@ initfs_lookup(
     size_t sz;
     ASSERT(str_equal(hdr->ustar_string, "ustar"));
     ASSERT(str_nequal(hdr->ustar_version, "00", 2));
-    sz = str_to_num_oct(hdr->file_size, sizeof(hdr->file_size));
+    sz = oct_str_to_num(hdr->file_size, sizeof(hdr->file_size));
     if (str_equal(hdr->file_name, path)) {
       *file_size = sz;
       *file_ptr = hdr + 1;
