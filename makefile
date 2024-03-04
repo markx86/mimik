@@ -17,7 +17,7 @@ GCC = gcc
 LD = ld
 GDB = gdb
 QEMU = qemu-system-$(ARCH)
-CLANGFMT = clang-fmt
+CLANGFMT = clang-format
 
 DEFINES = \
 	-DMIMIK_ARCH_$(call uppercase, $(ARCH))

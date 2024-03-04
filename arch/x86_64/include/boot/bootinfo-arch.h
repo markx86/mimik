@@ -15,7 +15,7 @@ struct bootinfo_acpi {
 };
 
 struct bootinfo_arch {
-	struct bootinfo_acpi acpi;
+  struct bootinfo_acpi acpi;
 };
 
 #endif

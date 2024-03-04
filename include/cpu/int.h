@@ -3,12 +3,14 @@
 
 #include <util/compiler.h>
 
-static inline void int_enable(void) {
-	asm("sti");
+static inline void
+int_enable(void) {
+  asm("sti");
 }
 
-static inline void int_disable(void) {
-	asm("cli");
+static inline void
+int_disable(void) {
+  asm("cli");
 }
 
 #endif

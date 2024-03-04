@@ -2,7 +2,7 @@
 #define MIMIK_ISR_ARCH_H
 
 struct isr_frame {
-	// TODO: fill this struct lol
+  /* TODO: fill this struct lol */
 };
 
 #endif

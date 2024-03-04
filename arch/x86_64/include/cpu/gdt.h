@@ -5,17 +5,17 @@
 
 #define GDTENTRY(label, base, limit, access, flags) \
   .global _gdt_##label;                             \
-  _gdt_##label:;                                    \
-    .short (limit) & 0xFFFF;                        \
-    .short (base) & 0xFFFF;                         \
-    .byte ((base) >> 16) & 0xFF;                    \
-    .byte (access);                                 \
-  _gdt_##label##_flags:;                            \
-    .byte ((flags) << 4) | (((limit) >> 16) & 0xF); \
-    .byte ((base) >> 24) & 0xFF
+  _gdt_##label :;                                   \
+  .short(limit) & 0xFFFF;                           \
+  .short(base) & 0xFFFF;                            \
+  .byte((base) >> 16) & 0xFF;                       \
+  .byte(access);                                    \
+  _gdt_##label##_flags :;                           \
+  .byte((flags) << 4) | (((limit) >> 16) & 0xF);    \
+  .byte((base) >> 24) & 0xFF
 #define GDTSYSENTRY(label, base, limit, access, flags) \
   GDTENTRY(label, base, limit, access, flags);         \
-  .long (base) >> 32;                                  \
+  .long(base) >> 32;                                   \
   .long 0
 
 #define ACCESS_PRESENT (1 << 7)
@@ -28,8 +28,8 @@
 #define FLAGS_PROTECTEDMODE (1 << 2)
 #define FLAGS_LONGMODE (1 << 1)
 
-#define KERNEL_CS (_gdt_kernel_code-_gdt_null)
-#define KERNEL_DS (_gdt_kernel_data-_gdt_null)
+#define KERNEL_CS (_gdt_kernel_code - _gdt_null)
+#define KERNEL_DS (_gdt_kernel_data - _gdt_null)
 
 #else
 

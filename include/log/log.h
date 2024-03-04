@@ -11,12 +11,12 @@
 #define LOG_COLOR_RESET "\033[0m"
 
 #define LOGTRACE(fmt, ...) \
-	printk("[" LOG_COLOR_TRACE "*" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
+  printk("[" LOG_COLOR_TRACE "*" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
 #define LOGSUCCESS(fmt, ...) \
-	printk("[" LOG_COLOR_SUCCESS "+" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
+  printk("[" LOG_COLOR_SUCCESS "+" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
 #define LOGWARNING(fmt, ...) \
-	printk("[" LOG_COLOR_WARNING "~" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
+  printk("[" LOG_COLOR_WARNING "~" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
 #define LOGERROR(fmt, ...) \
-	printk("[" LOG_COLOR_ERROR "-" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
+  printk("[" LOG_COLOR_ERROR "-" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
 
 #endif

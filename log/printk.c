@@ -75,7 +75,8 @@ print_binary(size_t sz, uint64_t n) {
     putc(((mask & n) != 0) + '0');
 }
 
-static void print_string(size_t length, const char* str) {
+static void
+print_string(size_t length, const char* str) {
   if (length == 0) {
     puts(str);
     return;
@@ -125,7 +126,9 @@ printk(const char* fmt, ...) {
         --fmt;
         goto next_mod;
       case 'b':
-        print_binary(f.leading_zeros != 0 ? f.leading_zeros : f.number_size, next_int(uint));
+        print_binary(
+            f.leading_zeros != 0 ? f.leading_zeros : f.number_size,
+            next_int(uint));
         break;
       case 'd':
         print_decimal(f.leading_zeros, next_int(int));

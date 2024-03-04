@@ -15,8 +15,10 @@ _assert(const char* file, size_t line, const char* expr) {
   file += (size_t)(root - this_file);
 
   printk(
-    "[" LOG_COLOR_FATAL "%s:%lu" LOG_COLOR_RESET "] Assertion failed: %s\n",
-    file, line, expr);
+      "[" LOG_COLOR_FATAL "%s:%lu" LOG_COLOR_RESET "] Assertion failed: %s\n",
+      file,
+      line,
+      expr);
 
   while (TRUE)
     __asm__("hlt");
