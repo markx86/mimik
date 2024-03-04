@@ -11,6 +11,7 @@
 struct print_flags {
   size_t number_size;
   size_t leading_zeros;
+  size_t string_length;
 };
 
 static void
@@ -74,6 +75,15 @@ print_binary(size_t sz, uint64_t n) {
     putc(((mask & n) != 0) + '0');
 }
 
+static void print_string(size_t length, const char* str) {
+  if (length == 0) {
+    puts(str);
+    return;
+  }
+  for (; length > 0; --length)
+    putc(*(str++));
+}
+
 void
 printk(const char* fmt, ...) {
   va_list ap;
@@ -92,6 +102,7 @@ printk(const char* fmt, ...) {
 
     f.number_size = sizeof(int);
     f.leading_zeros = 0;
+    f.string_length = 0;
 
   next_mod:
     switch (*(++fmt)) {
@@ -131,12 +142,17 @@ printk(const char* fmt, ...) {
         print_ptr(va_arg(ap, ptr_t), *fmt == 'P');
         break;
       case 's':
-        puts(va_arg(ap, const char*));
+        print_string(f.string_length, va_arg(ap, const char*));
         break;
       case 'c':
         putc((char)va_arg(ap, int));
         break;
       default:
+        if (*fmt >= '0' && *fmt <= '9') {
+          f.string_length *= 10;
+          f.string_length += (size_t)(*fmt - '0');
+          goto next_mod;
+        }
         break;
     }
   }
