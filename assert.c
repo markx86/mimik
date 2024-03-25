@@ -21,5 +21,5 @@ _assert(const char* file, size_t line, const char* expr) {
       expr);
 
   while (TRUE)
-    __asm__("hlt");
+    asm("hlt");
 }

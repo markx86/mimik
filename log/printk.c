@@ -63,6 +63,7 @@ print_ptr(ptr_t ptr, bool_t cap) {
     puts("(nil)");
     return;
   }
+  puts("0x");
   print_hex(sizeof(ptr_t) << 1, (addr_t)ptr, cap);
 }
 

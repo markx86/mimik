@@ -51,5 +51,7 @@ kernel_main(
   /* TODO: initialize PIC and mask all interrupts */
   int_enable();
   parse_bootinfo(bootinfo);
+  for (;;)
+    ;
   ASSERT(0 && "Hello from MIMIK!");
 }
