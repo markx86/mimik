@@ -1,7 +1,11 @@
 #ifndef MIMIK_BOOTINFO_ARCH_H
 #define MIMIK_BOOTINFO_ARCH_H
 
-#include <acpi.h>
+#ifndef MIMIK_BOOTINFO_H
+# error "Do not include bootinfo-arch.h directly. Include bootinfo.h instead."
+#endif
+
+#include <common/acpi.h>
 
 struct bootinfo_acpi {
   union {
