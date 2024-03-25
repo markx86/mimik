@@ -1,4 +1,5 @@
 #include <log/put.h>
+#include <cpu/io.h>
 #include <util/compiler.h>
 #include <types.h>
 
@@ -92,45 +93,33 @@ union lsr {
 
 static bool_t serial_initialized = FALSE;
 
-static inline void
-outb(uint16_t port, uint8_t b) {
-  asm("outb %%al, %%dx" : : "al"(b), "dx"(port));
-}
-
-static inline uint8_t
-inb(uint16_t port) {
-  uint8_t b;
-  asm("inb %%dx, %%al" : "=ax"(b) : "dx"(port));
-  return b;
-}
-
 static void
 init_serial(void) {
   union lcr lcr;
   union fcr fcr;
 
-  lcr.raw = inb(LCR);
+  lcr.raw = io_inb(LCR);
   lcr.dlab = TRUE;
-  outb(LCR, lcr.raw);
+  io_outb(LCR, lcr.raw);
 
   /* set baud rate to BAUD_TGT */
-  outb(DLL, DIVISOR & 0xff);
-  outb(DLM, (DIVISOR >> 8) & 0xff);
+  io_outb(DLL, DIVISOR & 0xff);
+  io_outb(DLM, (DIVISOR >> 8) & 0xff);
 
   lcr.data_bits = DATA_BITS_8;
   lcr.stop_bit = STOP_BITS_1;
   lcr.parity = PARITY_EVEN;
   lcr.break_signal_enable = FALSE; /* break signal disabled */
   lcr.dlab = FALSE;                /* disable DLAB */
-  outb(LCR, lcr.raw);
+  io_outb(LCR, lcr.raw);
 
-  fcr.raw = inb(FCR);
+  fcr.raw = io_inb(FCR);
   fcr.enable_fifo = TRUE;
   fcr.clear_rx_fifo = TRUE;
   fcr.clear_tx_fifo = TRUE;
   fcr.fifo_dma_mode = FIFO_DMA_MODE_0;
   fcr.fifo_size = FIFO_SIZE_14B;
-  outb(FCR, fcr.raw);
+  io_outb(FCR, fcr.raw);
 
   serial_initialized = TRUE;
 }
@@ -141,7 +130,7 @@ putc(char c) {
   if (unlikely(!serial_initialized))
     init_serial();
   do
-    lsr.raw = inb(LSR);
+    lsr.raw = io_inb(LSR);
   while (!lsr.thr_is_empty_and_idle);
-  outb(THR, (uint8_t)c);
+  io_outb(THR, (uint8_t)c);
 }
