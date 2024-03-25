@@ -21,19 +21,19 @@ typedef long int64_t;
 
 typedef unsigned char uint8_t;
 #define UINT8_MIN 0
-#define UINT8_MAX 0xFF
+#define UINT8_MAX 0xff
 
 typedef unsigned short uint16_t;
 #define UINT16_MIN 0
-#define UINT16_MAX 0xFFFF
+#define UINT16_MAX 0xffff
 
 typedef unsigned int uint32_t;
 #define UINT32_MIN 0
-#define UINT32_MAX 0xFFFFFFFF
+#define UINT32_MAX 0xffffffff
 
 typedef unsigned long uint64_t;
 #define UINT64_MIN 0
-#define UINT64_MAX 0xFFFFFFFFFFFFFFFF
+#define UINT64_MAX 0xffffffffffffffff
 
 typedef int64_t ssize_t;
 #define SSIZE_MIN -1

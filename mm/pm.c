@@ -34,7 +34,7 @@ static struct mem_bitmap mem_bitmap0;
 static char mem_bitmap0_page[BITMAP_BYTES];
 
 #define TOBITMAP(a) ((a) >> 27)
-#define TOINDEX(a) (((a) & 0x7FFF000) / PAGE_SIZE)
+#define TOINDEX(a) (((a) & 0x7fff000) / PAGE_SIZE)
 #define TOPADDR(b, i) (((b) << 27) + (i) * PAGE_SIZE)
 
 static void

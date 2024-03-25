@@ -19,7 +19,7 @@ boot_gdt:
   GDTENTRY(
     boot_code,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(0) +
     ACCESS_NORMALSEGMENT +
@@ -36,7 +36,7 @@ boot_gdt:
   GDTENTRY(
     boot_data,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(0) +
     ACCESS_NORMALSEGMENT +

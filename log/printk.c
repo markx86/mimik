@@ -44,8 +44,8 @@ print_hex(size_t zeros, uint64_t n, bool_t cap) {
   char cs[BUF_SIZE];
   char base = cap ? 'A' : 'a';
   for (i = 0; n > 0; n >>= 4, ++i) {
+    uint8_t d = n & 0xf;
     ASSERT(i < sizeof(cs));
-    uint8_t d = n & 0xF;
     if (d < 10)
       cs[i] = (char)(d + '0');
     else

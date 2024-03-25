@@ -43,22 +43,22 @@ setup_paging:
   /* pt index */
   shrdl $12, %edx, %eax
   movl %eax, %ecx
-  andl $0x1FF, %ecx
+  andl $0x1ff, %ecx
   pushl %ecx
   /* pd index */
   shrdl $9, %edx, %eax
   movl %eax, %ecx
-  andl $0x1FF, %ecx
+  andl $0x1ff, %ecx
   pushl %ecx
   /* pdp index */
   shrdl $9, %edx, %eax
   movl %eax, %ecx
-  andl $0x1FF, %ecx
+  andl $0x1ff, %ecx
   pushl %ecx
   /* pml4 index */
   shrdl $9, %edx, %eax
   movl %eax, %ecx
-  andl $0x1FF, %ecx
+  andl $0x1ff, %ecx
   pushl %ecx
 
   /*
@@ -86,15 +86,15 @@ setup_paging:
   movl $(pt + ENTRY_FLAGS), (%edi)
   /* store map start address */
   movl $_kernel_paddr_start, %edx
-  andl $~0xFFF, %edx
+  andl $~0xfff, %edx
   /*
    * compute kernel size in pages
    * NOTE: %ebx contains the bootinfo end address,
    *       which *should* be greater than _kernel_paddr_end
    */
   movl %ebx, %ecx
-  addl $0xFFF, %ecx
-  andl $~0xFFF, %ecx
+  addl $0xfff, %ecx
+  andl $~0xfff, %ecx
   subl %edx, %ecx
   shrl $12, %ecx
   /* get first kernel page directory entry */

@@ -6,7 +6,7 @@
 #include <log/log.h>
 #include <assert.h>
 
-#define HEAP_START 0xFFFFFF8000000000
+#define HEAP_START 0xffffff8000000000
 
 #define HEADER_MAGIC0 'H'
 #define HEADER_MAGIC1 'D'

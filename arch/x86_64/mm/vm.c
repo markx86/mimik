@@ -39,11 +39,11 @@ union vaddr {
 
 #define PT_LENGTH 512
 #define PT_SIZE PAGE_SIZE
-#define PT_TMP_START_VADDR 0xFFFFFFFFFFE00000
+#define PT_TMP_START_VADDR 0xffffffffffe00000
 #define PT_NUM_LEVELS 4
 #define PT_LAST_LEVEL (PT_NUM_LEVELS - 1)
 
-#define PTEPADDR(pte) ((pte)->bytes & 0x000FFFFFFFFFF000)
+#define PTEPADDR(pte) ((pte)->bytes & 0x000ffffffffff000)
 
 #define ISFLAGSET(flags, flag) ((flags & VM_MAP_##flag) != 0)
 #define ISFLAGUNSET(flags, flag) ((flags & VM_MAP_##flag) == 0)
@@ -70,7 +70,7 @@ invalidate_page(addr_t vaddr) {
 
 static inline void
 set_pte(union pte* entry, addr_t addr, enum vm_map_flags flags) {
-  entry->bytes = addr & 0x000FFFFFFFFFF000;
+  entry->bytes = addr & 0x000ffffffffff000;
   entry->present = 1;
   entry->writable = ISFLAGSET(flags, WRITABLE);
   entry->user_accessible = ISFLAGSET(flags, USER);
@@ -81,7 +81,7 @@ static addr_t
 map_page_tmp(addr_t paddr, enum vm_map_flags flags) {
   union vaddr vaddr = {.address = PT_TMP_START_VADDR};
   ASSERT(first_free_tmp_index < PT_LENGTH);
-  vaddr.pt_index = first_free_tmp_index & 0x1FF;
+  vaddr.pt_index = first_free_tmp_index & 0x1ff;
   set_pte(&tmp_pt.entries[vaddr.pt_index], paddr, flags);
   do {
     ++first_free_tmp_index;
@@ -308,12 +308,12 @@ vm_map_pages(
   res = recurse_map(table, indices, 0, &paddr_start, &pages, flags);
 
   if (res == SUCCESS && vaddr_hint != NULL) {
-    vaddr_indices.pml4_index = indices[0] & 0x1FF;
-    vaddr_indices.pdp_index = indices[1] & 0x1FF;
-    vaddr_indices.pd_index = indices[2] & 0x1FF;
-    vaddr_indices.pt_index = indices[3] & 0x1FF;
+    vaddr_indices.pml4_index = indices[0] & 0x1ff;
+    vaddr_indices.pdp_index = indices[1] & 0x1ff;
+    vaddr_indices.pd_index = indices[2] & 0x1ff;
+    vaddr_indices.pt_index = indices[3] & 0x1ff;
     if (indices[0] & 0x100)
-      vaddr_indices.address |= (addr_t)0xFFFF << 48;
+      vaddr_indices.address |= (addr_t)0xffff << 48;
     *vaddr_hint = vaddr_indices.address;
   }
 

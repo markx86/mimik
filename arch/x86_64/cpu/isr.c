@@ -25,8 +25,8 @@ struct PACKED idt_entry {
 };
 
 enum gate_type {
-  GATE_INTERRUPT = 0xE,
-  GATE_TRAP = 0xF
+  GATE_INTERRUPT = 0xe,
+  GATE_TRAP = 0xf
 };
 
 struct idt_entry idt[MAX_IDT_ENTRIES] = {0};
@@ -73,12 +73,12 @@ ISR(31);
 
 static inline void
 set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
-  entry->offset_low = ((uint64_t)address >> 00) & 0xFFFF;
-  entry->offset_mid = ((uint64_t)address >> 16) & 0xFFFF;
-  entry->offset_high = (uint32_t)((uint64_t)address >> 32) & 0xFFFFFFFF;
+  entry->offset_low = ((uint64_t)address >> 00) & 0xffff;
+  entry->offset_mid = ((uint64_t)address >> 16) & 0xffff;
+  entry->offset_high = (uint32_t)((uint64_t)address >> 32) & 0xffffffff;
   entry->segsel = (uint16_t)KERNEL_CS;
   entry->ist = 0;
-  entry->gate_type = (uint8_t)(type & 0xF);
+  entry->gate_type = (uint8_t)(type & 0xf);
   entry->zero = 0;
   entry->present = TRUE;
   entry->dpl = PL(0);

@@ -19,7 +19,7 @@ gdt:
   GDTENTRY(
     kernel_code,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(0) +
     ACCESS_NORMALSEGMENT +
@@ -37,7 +37,7 @@ gdt:
   GDTENTRY(
     kernel_data,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(0) +
     ACCESS_NORMALSEGMENT +
@@ -54,7 +54,7 @@ gdt:
   GDTENTRY(
     user_code,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(3) +
     ACCESS_NORMALSEGMENT +
@@ -72,7 +72,7 @@ gdt:
   GDTENTRY(
     user_data,
     0x0000000000000000,
-    0xFFFFF,
+    0xfffff,
     ACCESS_PRESENT +
     ACCESS_PRIVILEGELEVEL(3) +
     ACCESS_NORMALSEGMENT +

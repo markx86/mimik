@@ -2,7 +2,7 @@
 #include <util/compiler.h>
 #include <types.h>
 
-#define COM 0x03F8 /* COM1 port address */
+#define COM 0x03f8 /* COM1 port address */
 
 #define RBR (COM + 0)
 #define THR (COM + 0)
@@ -114,8 +114,8 @@ init_serial(void) {
   outb(LCR, lcr.raw);
 
   /* set baud rate to BAUD_TGT */
-  outb(DLL, DIVISOR & 0xFF);
-  outb(DLM, (DIVISOR >> 8) & 0xFF);
+  outb(DLL, DIVISOR & 0xff);
+  outb(DLM, (DIVISOR >> 8) & 0xff);
 
   lcr.data_bits = DATA_BITS_8;
   lcr.stop_bit = STOP_BITS_1;
