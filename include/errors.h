@@ -6,7 +6,8 @@ enum error {
   EOVERLAP,
   EFULL,
   ENOMAP,
-  ENOENT
+  ENOENT,
+  ENOTIMPL,
 };
 
 #endif
