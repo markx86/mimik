@@ -347,6 +347,21 @@ vm_map_pages(
 }
 
 status_t
+vm_map_bytes(
+    ptr_t table,
+    addr_t paddr_start,
+    size_t bytes,
+    addr_t* vaddr_hint,
+    enum vm_map_flags flags) {
+  status_t res;
+  addr_t aligned_paddr = PAGEALIGNDOWN(paddr_start);
+  bytes = PAGEALIGNUP(paddr_start + bytes) - aligned_paddr;
+  res = vm_map_pages(table, aligned_paddr, PAGES(bytes), vaddr_hint, flags);
+  *vaddr_hint |= paddr_start & 0xfff;
+  return res;
+}
+
+status_t
 vm_kmap_pages(
     addr_t paddr_start,
     size_t pages,
@@ -354,6 +369,16 @@ vm_kmap_pages(
     enum vm_map_flags flags) {
   ASSERT((flags & VM_MAP_USER) == 0);
   return vm_map_pages(pml4, paddr_start, pages, vaddr_hint, flags);
+}
+
+status_t
+vm_kmap_bytes(
+    addr_t paddr_start,
+    size_t bytes,
+    addr_t* vaddr_hint,
+    enum vm_map_flags flags) {
+  ASSERT((flags & VM_MAP_USER) == 0);
+  return vm_map_bytes(pml4, paddr_start, bytes, vaddr_hint, flags);
 }
 
 static size_t
@@ -399,8 +424,20 @@ vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages) {
 }
 
 void
+vm_unmap_bytes(ptr_t table, addr_t vaddr_start, size_t bytes) {
+  addr_t aligned_vaddr = PAGEALIGNDOWN(vaddr_start);
+  bytes = PAGEALIGNUP(vaddr_start + bytes) - aligned_vaddr;
+  return vm_unmap_pages(table, aligned_vaddr, PAGES(bytes));
+}
+
+void
 vm_kunmap_pages(addr_t vaddr_start, size_t pages) {
   vm_unmap_pages(pml4, vaddr_start, pages);
+}
+
+void
+vm_kunmap_bytes(addr_t vaddr_start, size_t bytes) {
+  vm_unmap_bytes(pml4, vaddr_start, bytes);
 }
 
 static status_t
