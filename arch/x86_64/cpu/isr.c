@@ -84,8 +84,8 @@ set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
   entry->dpl = PL(0);
 }
 
-#define TRAP(n) set_idt_entry(&idt[n], (void*)(&isr##n), GATE_TRAP)
-#define INTERRUPT(n) set_idt_entry(&idt[n], (void*)(&isr##n), GATE_INTERRUPT)
+#define TRAP(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_TRAP)
+#define INTERRUPT(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_INTERRUPT)
 
 /* NOTE: make this a list, maybe? */
 isr_t isrs[EXCEPTION_MAX] = {0};
