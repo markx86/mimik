@@ -5,6 +5,7 @@
 #include <log/log.h>
 #include <util/compiler.h>
 #include <types.h>
+#include <kernel.h>
 #include <assert.h>
 
 union pte {
@@ -368,6 +369,13 @@ vm_kmap_pages(
     addr_t* vaddr_hint,
     enum vm_map_flags flags) {
   ASSERT((flags & VM_MAP_USER) == 0);
+  ASSERT(vaddr_hint != NULL);
+  if (*vaddr_hint == 0)
+    *vaddr_hint = KERNEL_END_VADDR;
+  else
+    ASSERT(
+      *vaddr_hint > KERNEL_END_VADDR ||
+      (*vaddr_hint >= KERNEL_HEAP_START && *vaddr_hint < KERNEL_START_VADDR));
   return vm_map_pages(pml4, paddr_start, pages, vaddr_hint, flags);
 }
 
@@ -378,6 +386,9 @@ vm_kmap_bytes(
     addr_t* vaddr_hint,
     enum vm_map_flags flags) {
   ASSERT((flags & VM_MAP_USER) == 0);
+  ASSERT(vaddr_hint != NULL);
+  if (*vaddr_hint == 0)
+    *vaddr_hint = KERNEL_END_VADDR;
   return vm_map_bytes(pml4, paddr_start, bytes, vaddr_hint, flags);
 }
 
