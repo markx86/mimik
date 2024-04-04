@@ -4,9 +4,8 @@
 #include <util/align.h>
 #include <util/compiler.h>
 #include <log/log.h>
+#include <kernel.h>
 #include <assert.h>
-
-#define HEAP_START 0xffffff8000000000
 
 #define HEADER_MAGIC0 'H'
 #define HEADER_MAGIC1 'D'
@@ -27,7 +26,7 @@ struct PACKED header {
   struct header* prev;
 };
 
-static addr_t heap_end, heap_start = HEAP_START;
+static addr_t heap_end, heap_start = KERNEL_HEAP_START;
 static struct header *first_free, *last_block;
 
 void
@@ -245,11 +244,14 @@ join_free_backwards(struct header* this) {
 }
 
 void
-mm_free(ptr_t alloc) {
-  struct header* hdr = (struct header*)alloc - 1;
+mm_free(ptr_t* alloc) {
+  struct header* hdr;
+  ASSERT(alloc != NULL);
+  ASSERT(*alloc != NULL);
+  hdr = (struct header*)*alloc - 1;
   if (!ISHEADER(hdr)) {
     /* assume the allocation is aligned */
-    hdr = *((struct header**)alloc - 1);
+    hdr = *((struct header**)*alloc - 1);
     /* verify the header address is valid */
     ASSERT((addr_t)hdr >= heap_start);
     ASSERT((addr_t)(hdr + 1) < heap_end);
@@ -266,4 +268,5 @@ mm_free(ptr_t alloc) {
   }
   /* try joining the block with the previous one */
   join_free_backwards(hdr);
+  *alloc = NULL;
 }
