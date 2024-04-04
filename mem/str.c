@@ -11,6 +11,15 @@ str_length(const char* str) {
 }
 
 bool_t
+str_nlength(const char* str, size_t max_len) {
+  size_t len;
+  ASSERT(str != NULL);
+  for (len = 0; len < max_len && *(str++) != '\0'; ++len)
+    ;
+  return len == max_len;
+}
+
+bool_t
 str_equal(const char* this, const char* other) {
   size_t n1, n2;
   n1 = str_length(this);
