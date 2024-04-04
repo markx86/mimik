@@ -37,10 +37,17 @@ struct bootinfo_acpi {
 };
 
 enum acpi_table {
-  ACPI_MADT,
+  ACPI_TABLE_MADT,
+  ACPI_TABLE_FADT,
+  ACPI_TABLE_MCFG,
+  ACPI_TABLE_RSDT,
+  ACPI_TABLE_SSDT,
+  ACPI_TABLE_XSDT,
+  ACPI_TABLE_MAX
 };
 
-ptr_t acpi_get_table(enum acpi_table table);
+ptr_t acpi_get_known_table(enum acpi_table table);
+ptr_t acpi_get_table(const char* sig);
 status_t acpi_init(struct bootinfo_acpi* acpi);
 
 #endif
