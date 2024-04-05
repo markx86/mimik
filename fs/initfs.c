@@ -51,7 +51,7 @@ initfs_from_module(struct bootinfo_module* mod) {
   struct initfs fs;
   fs.phys_start = mod->start_address;
   fs.phys_end = mod->end_address;
-  fs.virt_start = mod->start_address;
+  fs.virt_start = 0;
   pm_try_lock_range(fs.phys_start, fs.phys_end);
   vm_kmap_range(fs.phys_start, fs.phys_end, &fs.virt_start, 0);
   fs.virt_end = fs.virt_start + (fs.phys_end - fs.phys_start);
