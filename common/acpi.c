@@ -70,13 +70,18 @@ ptr_t acpi_get_known_table(enum acpi_table table) {
 ptr_t
 acpi_get_table(const char* sig) {
   struct acpi_sdt_header** tbl = tbls;
+  ASSERT(tbls != NULL);
   if (sig == NULL)
     return NULL;
   if (!str_nlength(sig, 4))
     return NULL;
   while (*tbl != NULL) {
-    if (str_nequal((*tbl)->signature, sig, 4))
-      return *tbl;
+    if (str_nequal((*tbl)->signature, sig, 4)) {
+      if (checksum_matches(*tbl, (*tbl)->length))
+        return *tbl;
+      LOGWARNING("corrupted table %4s", sig);
+      return NULL;
+    }
     ++tbl;
   }
   return NULL;
