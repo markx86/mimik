@@ -39,7 +39,7 @@ static char mem_bitmap0_page[BITMAP_BYTES];
 
 static void
 compute_mem_size(struct bootinfo_mem_map* mem_map) {
-  mem_set(&mem_info, 0, sizeof(struct mem_info));
+  mem_set(&mem_info, 0, sizeof(mem_info));
   for (size_t i = 0; i < mem_map->entries; ++i) {
     struct bootinfo_mem_segment* segment = &mem_map->segments[i];
     mem_info.free += segment->length;
@@ -127,7 +127,7 @@ create_bitmap(size_t index) {
     if (mem_bitmap->index > index)
       break;
   }
-  new_bitmap = mm_alloc(sizeof(struct mem_bitmap));
+  new_bitmap = mm_alloc(sizeof(*new_bitmap));
   ASSERT(new_bitmap != NULL);
   new_bitmap->first_free = 0;
   new_bitmap->index = 0;

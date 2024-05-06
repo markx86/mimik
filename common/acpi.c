@@ -31,7 +31,7 @@ static const char* known_tbls[] = {
 
 static status_t map_table(addr_t paddr, struct acpi_sdt_header** out) {
   status_t res;
-  res = vm_kmap_bytes(paddr, sizeof(struct acpi_sdt_header), (addr_t*)out, 0);
+  res = vm_kmap_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
   if (ISERROR(res))
     return res;
   if (root->length > PAGE_SIZE - ((addr_t)root & 0xfff)) {
@@ -89,7 +89,7 @@ acpi_get_table(const char* sig) {
 
 static status_t acpi_init_generic(struct acpi_rsdp* rsdp, addr_t sdt_address, uint8_t revision) {
   status_t res;
-  if (!checksum_matches(rsdp, sizeof(struct acpi_rsdp)))
+  if (!checksum_matches(rsdp, sizeof(*rsdp)))
     return -EINVAL;
   if (!signature_matches(rsdp->signature))
     return -EINVAL;
@@ -111,7 +111,7 @@ acpi_init_rsdp(struct acpi_rsdp* rsdp) {
   if (!str_nequal(root->signature, known_tbls[ACPI_TABLE_RSDT], 4))
     return -EINVAL;
   /* map all the acpi tables in the RSDT */
-  n_tbls = (root->length - sizeof(struct acpi_sdt_header)) >> 2;
+  n_tbls = (root->length - sizeof(*root)) >> 2;
   paddrs = (uint32_t*)(root + 1);
   tbls_sz = sizeof(struct acpi_sdt_header*) * (n_tbls + 1);
   tbls = mm_alloc(tbls_sz);

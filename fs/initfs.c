@@ -63,7 +63,7 @@ initfs_release(struct initfs* fs) {
   ASSERT(fs->virt_start != 0);
   vm_kunmap_range(fs->virt_start, fs->virt_end);
   pm_try_release_range(fs->phys_start, fs->phys_end);
-  mem_set(fs, 0, sizeof(struct initfs));
+  mem_set(fs, 0, sizeof(*fs));
 }
 
 status_t
@@ -90,7 +90,7 @@ initfs_lookup(
     }
     hdr = (struct ustar_header*)ALIGNUP(
         (addr_t)(hdr + 1) + sz,
-        sizeof(struct ustar_header));
+        sizeof(*hdr));
   }
   return -ENOENT;
 }

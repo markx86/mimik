@@ -140,7 +140,7 @@ mm_alloc(size_t sz) {
   ASSERT(sz <= UINT32_MAX);
   /* the size of the block is the size of the allocation
      plus the size of the block header */
-  sz += sizeof(struct header);
+  sz += sizeof(*hdr);
   /* make sure the block is at least the minimum size */
   sz = sz >= MIN_BLOCK_SIZE ? sz : MIN_BLOCK_SIZE;
   hdr = find_worst_fit(sz);
