@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-void pm_init(addr_t free_mem_ptr);
+void pm_init(void);
 
 addr_t pm_request_page(void);
 addr_t pm_request_pages(size_t num);

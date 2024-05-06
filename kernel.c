@@ -10,16 +10,6 @@
 struct kernel_config kcfg;
 
 static void
-find_free_mem_ptr(struct bootinfo* bootinfo, addr_t* free_mem_ptr) {
-  for (struct bootinfo_module* module = bootinfo->modules; module != NULL;
-       module = module->next) {
-    if (module->end_address > *free_mem_ptr)
-      *free_mem_ptr = module->end_address;
-  }
-  LOGTRACE("free mem @ %p", *free_mem_ptr);
-}
-
-static void
 parse_bootinfo(struct bootinfo* bootinfo) {
   kcfg.bootinfo = bootinfo;
 
@@ -41,9 +31,7 @@ kernel_main(
     struct bootinfo* bootinfo,
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {
-  addr_t free_mem_ptr = bootinfo_data_end;
-  find_free_mem_ptr(bootinfo, &free_mem_ptr);
-  pm_init(free_mem_ptr);
+  pm_init();
   vm_init();
   mm_init();
   ASSERT(arch_init(bootinfo) == SUCCESS);

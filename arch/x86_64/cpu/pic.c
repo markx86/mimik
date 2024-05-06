@@ -39,11 +39,7 @@ bool_t
 has_apic(struct bootinfo_arch* bootinfo) {
   struct cpuid_regs regs;
   cpuid(CPUID_STDFN_00000001, &regs);
-  if ((regs.edx & (1 << 9)) == 0)
-    return FALSE;
-  acpi_get_table(ACPI_MADT);
-  // return TRUE;
-  return FALSE;
+  return (regs.edx & (1 << 9)) == 0;
 }
 
 status_t

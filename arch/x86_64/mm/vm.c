@@ -229,7 +229,7 @@ next_free_entry:
     }
 
     found_pages += (size_t)res;
-    if (res >= pages)
+    if (res >= (ssize_t)pages)
       return (status_t)found_pages;
     if (index[1] < PT_LENGTH - 1) {
     retry_loop:

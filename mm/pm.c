@@ -60,7 +60,7 @@ init_first_bitmap(void) {
 }
 
 void
-pm_init(addr_t free_mem_ptr) {
+pm_init(void) {
   init_first_bitmap();
   compute_mem_size(&kcfg.bootinfo->mem_map);
   pm_try_lock_range(KERNEL_START_PADDR, KERNEL_END_PADDR);

@@ -27,6 +27,7 @@ GCCFLAGS = \
 	-mno-red-zone 							\
 	-mno-sse								\
 	-Wall 									\
+	-Wextra									\
 	-Wconversion							\
 	-O0										\
 	-std=c99								\
