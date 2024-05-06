@@ -88,13 +88,13 @@ print_string(size_t length, const char* str) {
 
 void
 printk(const char* fmt, ...) {
-  va_list ap;
+  VA_LIST ap;
   struct print_flags f = {0};
 
 #define next_int(t) \
-  (f.number_size > sizeof(int) ? va_arg(ap, t##64_t) : va_arg(ap, t##32_t))
+  (f.number_size > sizeof(int) ? VA_ARG(ap, t##64_t) : VA_ARG(ap, t##32_t))
 
-  va_start(ap, fmt);
+  VA_START(ap, fmt);
 
   for (; *fmt != '\0'; ++fmt) {
     if (*fmt != '%') {
@@ -143,13 +143,13 @@ printk(const char* fmt, ...) {
         break;
       case 'p':
       case 'P':
-        print_ptr(va_arg(ap, ptr_t), *fmt == 'P');
+        print_ptr(VA_ARG(ap, ptr_t), *fmt == 'P');
         break;
       case 's':
-        print_string(f.string_length, va_arg(ap, const char*));
+        print_string(f.string_length, VA_ARG(ap, const char*));
         break;
       case 'c':
-        putc((char)va_arg(ap, int));
+        putc((char)VA_ARG(ap, int));
         break;
       default:
         if (*fmt >= '0' && *fmt <= '9') {
@@ -161,5 +161,5 @@ printk(const char* fmt, ...) {
     }
   }
 
-  va_end(ap);
+  VA_END(ap);
 }

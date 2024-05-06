@@ -1,19 +1,19 @@
 #ifndef MIMIK_ATTRIBUTES_H
 #define MIMIK_ATTRIBUTES_H
 
-#define attributes(x) __attribute__((x))
+#define ASM(...) __asm__(__VA_ARGS__)
 
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
 
-#define va_list __builtin_va_list
-#define va_start __builtin_va_start
-#define va_end __builtin_va_end
-#define va_arg __builtin_va_arg
+#define VA_LIST           __builtin_va_list
+#define VA_START(ap, arg) __builtin_va_start(ap, arg)
+#define VA_END(ap)        __builtin_va_end(ap)
+#define VA_ARG(ap, t)     __builtin_va_arg(ap, t)
 
-#define asm __asm__
+#define ATTRIBUTES(x) __attribute__((x))
 
-#define PACKED attributes(packed)
-#define ALIGNED(s) attributes(aligned(s))
+#define PACKED ATTRIBUTES(packed)
+#define ALIGNED(s) ATTRIBUTES(aligned(s))
 
 #endif

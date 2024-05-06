@@ -127,7 +127,7 @@ init_serial(void) {
 void
 putc(char c) {
   union lsr lsr;
-  if (unlikely(!serial_initialized))
+  if (UNLIKELY(!serial_initialized))
     init_serial();
   do
     lsr.raw = io_inb(LSR);

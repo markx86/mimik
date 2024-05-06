@@ -15,7 +15,7 @@ struct cpuid_regs {
 
 static inline void
 cpuid(uint32_t code, struct cpuid_regs* regs) {
-  asm("cpuid"
+  ASM("cpuid"
       : "=a"(regs->eax), "=b"(regs->ebx), "=c"(regs->ecx), "=d"(regs->edx)
       : "a"(code));
 }

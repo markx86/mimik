@@ -8,7 +8,7 @@ void _assert(const char* file, size_t line, const char* msg);
 
 #define ASSERT(x)                      \
   do {                                 \
-    if (unlikely(!(x)))                \
+    if (UNLIKELY(!(x)))                \
       _assert(__FILE__, __LINE__, #x); \
   } while (0)
 

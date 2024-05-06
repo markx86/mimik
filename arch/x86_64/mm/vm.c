@@ -60,13 +60,13 @@ static struct pt ALIGNED(PT_SIZE) tmp_pt;
 static inline addr_t
 get_pml4_paddr(void) {
   addr_t paddr;
-  asm("movq %%cr3, %0" : "=r"(paddr));
+  ASM("movq %%cr3, %0" : "=r"(paddr));
   return paddr;
 }
 
 static inline void
 invalidate_page(addr_t vaddr) {
-  asm("invlpg (%0)" : "=r"(vaddr));
+  ASM("invlpg (%0)" : "=r"(vaddr));
 }
 
 static inline void
@@ -143,8 +143,8 @@ vm_init(void) {
 
 void
 vm_flush_tlb(void) {
-  asm("movq %%cr3, %%rax" : : : "rax");
-  asm("movq %%rax, %%cr3" : : : "rax");
+  ASM("movq %%cr3, %%rax" : : : "rax");
+  ASM("movq %%rax, %%cr3" : : : "rax");
 }
 
 static addr_t

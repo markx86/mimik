@@ -5,12 +5,12 @@
 
 static inline void
 int_enable(void) {
-  asm("sti");
+  ASM("sti");
 }
 
 static inline void
 int_disable(void) {
-  asm("cli");
+  ASM("cli");
 }
 
 #endif

@@ -126,7 +126,7 @@ isr_init(void) {
   TRAP(30);
   TRAP(31);
 
-  asm("lidt %0" : : "m"(idtr));
+  ASM("lidt %0" : : "m"(idtr));
 }
 
 void
