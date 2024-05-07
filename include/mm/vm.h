@@ -45,13 +45,13 @@ status_t vm_kmap_bytes(
 #define vm_kmap_range(paddr_start, paddr_end, vaddr_hint, flags) \
   vm_kmap_bytes(paddr_start, paddr_end - paddr_start, vaddr_hint, flags)
 
-void vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages);
-void vm_unmap_bytes(ptr_t table, addr_t vaddr_start, size_t bytes);
+size_t vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages);
+size_t vm_unmap_bytes(ptr_t table, addr_t vaddr_start, size_t bytes);
 #define vm_unmap_page(table, vaddr) vm_unmap_pages(table, vaddr, 1)
 #define vm_unmap_range(table, vaddr_start, vaddr_end) \
   vm_unmap_bytes(table, vaddr_start, vaddr_end - vaddr_start)
-void vm_kunmap_pages(addr_t vaddr_start, size_t pages);
-void vm_kunmap_bytes(addr_t vaddr_start, size_t bytes);
+size_t vm_kunmap_pages(addr_t vaddr_start, size_t pages);
+size_t vm_kunmap_bytes(addr_t vaddr_start, size_t bytes);
 #define vm_kunmap_page(vaddr) vm_kunmap_pages(vaddr, 1)
 #define vm_kunmap_range(vaddr_start, vaddr_end) \
   vm_kunmap_bytes(vaddr_start, vaddr_end - vaddr_start)

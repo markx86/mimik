@@ -66,7 +66,7 @@ get_pml4_paddr(void) {
 
 static inline void
 invalidate_page(addr_t vaddr) {
-  ASM("invlpg (%0)" : "=r"(vaddr));
+  ASM("invlpg (%0)" : : "r"(vaddr));
 }
 
 static inline void
@@ -159,6 +159,7 @@ create_pt(struct pt* pt, size_t index) {
   return vaddr;
 }
 
+/* NOTE: only call this function on PTEs belonging to non leaf PTs */
 static void
 update_pt_pte_flags(struct pt* pt, size_t index, enum vm_map_flags flags) {
   union pte* entry;
@@ -167,6 +168,7 @@ update_pt_pte_flags(struct pt* pt, size_t index, enum vm_map_flags flags) {
   entry = &pt->entries[index];
   entry->writable = ISFLAGSET(flags, WRITABLE);
   entry->user_accessible = ISFLAGSET(flags, USER);
+  /* NX bit should only be set on leaf PTEs */
   entry->no_execute = 0;
 }
 
@@ -181,9 +183,9 @@ get_pages_per_entry(size_t level) {
 static inline bool_t
 pte_flags_match(union pte* e, enum vm_map_flags flags) {
   bool_t res = TRUE;
-  res = res && (!!e->writable == !!(flags & VM_MAP_WRITABLE));
-  res = res && (!!e->no_execute != !!(flags & VM_MAP_EXECUTABLE));
-  res = res && (!!e->user_accessible == !!(flags & VM_MAP_USER));
+  res = res && (e->writable && ISFLAGSET(flags, WRITABLE));
+  res = res && (e->user_accessible && ISFLAGSET(flags, USER));
+  res = res && (e->no_execute && ISFLAGUNSET(flags, EXECUTABLE));
   return res;
 }
 
@@ -210,6 +212,8 @@ next_free_entry:
     if (level == PT_LAST_LEVEL) {
       if (strict)
         return -EOVERLAP;
+      else if (pte_flags_match(&pt->entries[i], flags))
+        break;
       goto retry_loop;
     }
 
@@ -312,38 +316,39 @@ vm_map_pages(
     addr_t* vaddr_hint,
     enum vm_map_flags flags) {
   status_t res;
-  size_t* indices;
-  union vaddr vaddr_indices = {0};
+  size_t indices[4];
+  union vaddr vaddr_indices;
 
   ASSERT(table != NULL);
   ASSERT(vaddr_hint != NULL);
   /* ensure the paddr is page aligned */
   ASSERT((paddr_start & 0xfff) == 0);
+  ASSERT((*vaddr_hint & 0xfff) == 0);
 
-  vaddr_indices.address = *vaddr_hint & (addr_t)~0xfff;
-  indices = (size_t[4]){
-      vaddr_indices.pml4_index,
-      vaddr_indices.pdp_index,
-      vaddr_indices.pd_index,
-      vaddr_indices.pt_index,
-  };
+  vaddr_indices.address = *vaddr_hint;
+
+  indices[0] = vaddr_indices.pml4_index;
+  indices[1] = vaddr_indices.pdp_index;
+  indices[2] = vaddr_indices.pd_index;
+  indices[3] = vaddr_indices.pt_index;
 
   res = find_space(table, indices, 0, paddr_start, pages, flags);
   if (ISERROR(res))
-    return res;
+    goto out;
 
   res = recurse_map(table, indices, 0, &paddr_start, &pages, flags);
+  if (ISERROR(res))
+    goto out;
 
-  if (res == SUCCESS && vaddr_hint != NULL) {
-    vaddr_indices.pml4_index = indices[0] & 0x1ff;
-    vaddr_indices.pdp_index = indices[1] & 0x1ff;
-    vaddr_indices.pd_index = indices[2] & 0x1ff;
-    vaddr_indices.pt_index = indices[3] & 0x1ff;
-    if (indices[0] & 0x100)
-      vaddr_indices.address |= (addr_t)0xffff << 48;
-    *vaddr_hint = vaddr_indices.address;
-  }
+  vaddr_indices.pml4_index = indices[0] & 0x1ff;
+  vaddr_indices.pdp_index = indices[1] & 0x1ff;
+  vaddr_indices.pd_index = indices[2] & 0x1ff;
+  vaddr_indices.pt_index = indices[3] & 0x1ff;
+  if (indices[0] & 0x100)
+    vaddr_indices.address |= (addr_t)0xffff << 48;
+  *vaddr_hint = vaddr_indices.address;
 
+out:
   return res;
 }
 
@@ -356,7 +361,8 @@ vm_map_bytes(
     enum vm_map_flags flags) {
   status_t res;
   addr_t aligned_paddr = PAGEALIGNDOWN(paddr_start);
-  bytes = PAGEALIGNUP(paddr_start + bytes) - aligned_paddr;
+  bytes = (paddr_start + bytes) - aligned_paddr;
+  *vaddr_hint &= ~(size_t)0xfff;
   res = vm_map_pages(table, aligned_paddr, PAGES(bytes), vaddr_hint, flags);
   *vaddr_hint |= paddr_start & 0xfff;
   return res;
@@ -397,62 +403,65 @@ vm_kmap_bytes(
 }
 
 static size_t
-recurse_unmap(struct pt* pt, size_t* index, size_t level, size_t pages) {
+recurse_unmap(struct pt* pt, size_t* index, size_t level, addr_t* vaddr, size_t pages) {
   addr_t pt_vaddr;
-  size_t unmapped_pages;
-  for (unmapped_pages = 0; *index < PT_LENGTH; ++(*index)) {
+  size_t unmapped_pages, pages_per_entry = get_pages_per_entry(level);
+  for (unmapped_pages = 0; *index < PT_LENGTH && unmapped_pages < pages; ++(*index)) {
     union pte* entry = &pt->entries[*index];
     if (level == PT_LAST_LEVEL) {
       entry->bytes = 0;
+      invalidate_page(*vaddr);
       ++unmapped_pages;
+      *vaddr += PAGE_SIZE;
     } else if (entry->present) {
       pt_vaddr = map_page_tmp(PTEPADDR(entry), VM_MAP_WRITABLE);
       unmapped_pages +=
-          recurse_unmap((struct pt*)pt_vaddr, index + 1, level + 1, pages);
+          recurse_unmap((struct pt*)pt_vaddr, index + 1, level + 1, vaddr, pages);
       unmap_page_tmp(pt_vaddr);
-    } else
-      unmapped_pages += get_pages_per_entry(level);
+    } else {
+      unmapped_pages += pages_per_entry;
+      *vaddr += pages_per_entry * PAGE_SIZE;
+    }
     if (unmapped_pages >= pages)
       break;
   }
   return unmapped_pages;
 }
 
-void
+size_t
 vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages) {
-  size_t* indices;
-  union vaddr vaddr_indices = {.address = vaddr_start};
+  size_t indices[4];
+  union vaddr vaddr_indices;
 
   ASSERT(table != NULL);
   /* ensure the vaddr is aligned */
   ASSERT((vaddr_start & 0xfff) == 0);
 
-  indices = (size_t[4]){
-      vaddr_indices.pml4_index,
-      vaddr_indices.pdp_index,
-      vaddr_indices.pd_index,
-      vaddr_indices.pt_index};
+  vaddr_indices.address = vaddr_start;
 
-  recurse_unmap(table, indices, 0, pages);
-  for (; pages > 0; --pages, vaddr_start += PAGE_SIZE)
-    invalidate_page(vaddr_start);
+  indices[0] = vaddr_indices.pml4_index;
+  indices[1] = vaddr_indices.pdp_index;
+  indices[2] = vaddr_indices.pd_index;
+  indices[3] = vaddr_indices.pt_index;
+
+  return recurse_unmap(table, indices, 0, &vaddr_start, pages);
 }
 
-void
+size_t
 vm_unmap_bytes(ptr_t table, addr_t vaddr_start, size_t bytes) {
   addr_t aligned_vaddr = PAGEALIGNDOWN(vaddr_start);
-  bytes = PAGEALIGNUP(vaddr_start + bytes) - aligned_vaddr;
+  bytes = (vaddr_start + bytes) - aligned_vaddr;
   return vm_unmap_pages(table, aligned_vaddr, PAGES(bytes));
 }
 
-void
+size_t
 vm_kunmap_pages(addr_t vaddr_start, size_t pages) {
-  vm_unmap_pages(pml4, vaddr_start, pages);
+  return vm_unmap_pages(pml4, vaddr_start, pages);
 }
 
-void
+size_t
 vm_kunmap_bytes(addr_t vaddr_start, size_t bytes) {
-  vm_unmap_bytes(pml4, vaddr_start, bytes);
+  return vm_unmap_bytes(pml4, vaddr_start, bytes);
 }
 
 static status_t
@@ -480,15 +489,23 @@ recurse_find(struct pt* pt, size_t* index, size_t level, addr_t* paddr) {
 
 status_t
 vm_vaddr_to_paddr(ptr_t table, addr_t vaddr, addr_t* paddr) {
-  size_t* indices;
+  status_t res;
+  size_t indices[4];
   union vaddr i = {.address = vaddr};
 
   ASSERT(paddr != NULL);
   ASSERT(table != NULL);
 
-  indices = (size_t[4]){i.pml4_index, i.pdp_index, i.pd_index, i.pt_index};
+  indices[0] = i.pml4_index;
+  indices[1] = i.pdp_index;
+  indices[2] = i.pd_index;
+  indices[3] = i.pt_index;
 
-  return recurse_find(table, indices, 0, paddr);
+  res = recurse_find(table, indices, 0, paddr);
+  if (res == SUCCESS)
+    *paddr |= vaddr & 0xfff;
+
+  return res;
 }
 
 status_t

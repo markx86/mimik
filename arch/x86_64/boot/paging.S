@@ -121,8 +121,6 @@ get_entry:
 
 zero_pt:
   movl $(SIZE_4KB >> 2), %ecx
-0:
-  movl $0, (%edi)
-  addl $4, %edi
-  loop 0b
+  xorl %eax, %eax
+  rep stosl
   ret
