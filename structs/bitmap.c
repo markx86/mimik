@@ -31,10 +31,10 @@ bitmap_set(struct bitmap* b, size_t i, bool_t v) {
   if (i >= b->size)
     return -EINVAL;
   byte = i >> 3;
-  bit = i & 0b111;
+  bit = i & 7;
   if (((b->map[byte] >> bit) & 1) == v)
     return SNOCHANGE;
-  mask = 1 << bit;
+  mask = (uint8_t)(1 << bit);
   if (v) {
     b->map[byte] |= mask;
     --b->unset;

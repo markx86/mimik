@@ -6,13 +6,13 @@
 
 static inline void
 io_outb(uint16_t port, uint8_t b) {
-  ASM("outb %%al, %%dx" : : "al"(b), "dx"(port));
+  ASM("outb %%al, %%dx" : : "a"(b), "d"(port));
 }
 
 static inline uint8_t
 io_inb(uint16_t port) {
   uint8_t b;
-  ASM("inb %%dx, %%al" : "=ax"(b) : "dx"(port));
+  ASM("inb %%dx, %%al" : "=a"(b) : "d"(port));
   return b;
 }
 

@@ -70,9 +70,9 @@ isr_stub:
 	movq $error_msg, %rdi
 	call printk
 	movq $(_fail+HIGHER_HALF), %rax
-	jmp %rax
+	jmp *%rax
 0:
-	call %rax
+	call *%rax
 	POPREGS()
 	iretq
 

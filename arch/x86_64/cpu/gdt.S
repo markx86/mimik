@@ -92,11 +92,11 @@ gdtr:
 gdt_load:
   lgdtq (gdtr)
   /*
-   * retfq expects the following data on the stack:
+   * lretq expects the following data on the stack:
    * (rsp+0): the return address
    * (rsp+8): the gdt code segment selector
    */
   popq %rax
   pushq $KERNEL_CS
   pushq %rax
-  retfq
+  lretq

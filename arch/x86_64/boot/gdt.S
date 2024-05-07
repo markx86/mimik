@@ -90,7 +90,7 @@ far_return:
    * since the gdt remains the same.
    * 
    * we need to do a far return to reload the gdt
-   * retfq expects the following data on the stack:
+   * lretq expects the following data on the stack:
    * (rsp+0): the return address
    * (rsp+8): the gdt code segment selector
    * in this case we want to return to our 64 bit long mode entry in the higher
@@ -99,4 +99,4 @@ far_return:
   addq $4, %rsp
   pushq $BOOT_CS
   pushq $_stub64
-  retfq
+  lretq

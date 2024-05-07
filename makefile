@@ -13,15 +13,15 @@ ARCHDIR = $(SOURCEDIR)/$(RELARCHDIR)
 TARGET = $(BUILDDIR)/mimik-$(VERSION)-$(ARCH)
 SOURCES = $(call findsources, $(SOURCEDIR), -not -path '$(SOURCEDIR)/arch/*')
 
-GCC = gcc
-LD = ld
+CC = clang
+LD = ld.lld
 GDB = gdb
 QEMU = qemu-system-$(ARCH)
 CLANGFMT = clang-format
 
 DEFINES = \
 	-DMIMIK_ARCH_$(call uppercase, $(ARCH))
-GCCFLAGS = \
+CCFLAGS = \
 	-ffreestanding 							\
 	-nostdinc								\
 	-mno-red-zone 							\
@@ -57,9 +57,9 @@ GDBFLAGS = \
 include $(ARCHDIR)/arch.mk
 
 ifeq ($(BUILDTYPE),DEBUG)
-GCCFLAGS += -ggdb
+CCFLAGS += -ggdb
 else
-GCCFLAGS += -Werror
+CCFLAGS += -Werror
 endif
 
 OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%_c.o,$(SOURCES))
@@ -86,12 +86,12 @@ fmt:
 
 $(BUILDDIR)/%_c.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
-	$(GCC) $(GCCFLAGS) $(DEFINES) -c $< -o $@
+	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
 	
 $(BUILDDIR)/%_S.o: $(SOURCEDIR)/%.S
 	@mkdir -p $(dir $@)
-	$(GCC) $(GCCFLAGS) $(DEFINES) -c $< -o $@
+	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
 
 $(BUILDDIR)/$(LDS): $(SOURCEDIR)/$(LDS)
 	@mkdir -p $(dir $@)
-	$(GCC) -E -P -x c $(DEFINES) $< > $@
+	$(CC) -E -P -x c $(DEFINES) $< > $@
