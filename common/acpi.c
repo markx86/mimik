@@ -34,8 +34,9 @@ static status_t map_table(addr_t paddr, struct acpi_sdt_header** out) {
   res = vm_kmap_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
   if (ISERROR(res))
     return res;
-  if (root->length > PAGE_SIZE - ((addr_t)root & 0xfff)) {
-    res = vm_kmap_bytes((addr_t)*out, (*out)->length, (addr_t*)out, 0);
+  // FIXME: this could page-fault if (*out)->length is in the next page
+  if ((*out)->length > PAGE_SIZE - ((addr_t)*out & 0xfff)) {
+    res = vm_kmap_bytes(paddr, (*out)->length, (addr_t*)out, 0);
     if (ISERROR(res))
       return res;
   }
@@ -110,6 +111,8 @@ acpi_init_rsdp(struct acpi_rsdp* rsdp) {
     return res;
   if (!str_nequal(root->signature, known_tbls[ACPI_TABLE_RSDT], 4))
     return -EINVAL;
+  if (!checksum_matches(root, root->length))
+    return -ECHK;
   /* map all the acpi tables in the RSDT */
   n_tbls = (root->length - sizeof(*root)) >> 2;
   paddrs = (uint32_t*)(root + 1);
@@ -134,6 +137,8 @@ acpi_init_xsdp(struct acpi_xsdp* xsdp) {
     return res;
   if (!str_nequal(root->signature, known_tbls[ACPI_TABLE_XSDT], 4))
     return -EINVAL;
+  if (!checksum_matches(root, root->length))
+    return -ECHK;
   /* map all the acpi tables in the XSDT */
   n_tbls = (root->length - sizeof(struct acpi_sdt_header)) >> 3;
   paddrs = (uint64_t*)(root + 1);

@@ -8,6 +8,7 @@ enum error {
   ENOMAP,
   ENOENT,
   ENOTIMPL,
+  ECHK,
 };
 
 #endif
