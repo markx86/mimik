@@ -18,5 +18,7 @@
   printk("[" LOG_COLOR_WARNING "~" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
 #define LOGERROR(fmt, ...) \
   printk("[" LOG_COLOR_ERROR "-" LOG_COLOR_RESET "] " fmt "\n", ##__VA_ARGS__)
+#define LOGFATAL(fmt, ...) \
+  printk(LOG_COLOR_FATAL "[!]" LOG_COLOR_RESET " " fmt "\n", ##__VA_ARGS__)
 
 #endif
