@@ -204,7 +204,6 @@ find_space(
   ASSERT(level < PT_NUM_LEVELS);
 
   strict = (flags & VM_MAP_STRICT) != 0;
-next_free_entry:
   *index = i;
   found_pages = 0;
   for (; found_pages < pages && i < PT_LENGTH && pt->entries[i].present; ++i) {
@@ -237,8 +236,8 @@ next_free_entry:
       return (status_t)found_pages;
     if (index[1] < PT_LENGTH - 1) {
     retry_loop:
-      ++i;
-      goto next_free_entry;
+      *index = ++i;
+      found_pages = 0;
     }
   }
 

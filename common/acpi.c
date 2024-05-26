@@ -112,7 +112,7 @@ acpi_init_rsdp(struct acpi_rsdp* rsdp) {
   if (!str_nequal(root->signature, known_tbls[ACPI_TABLE_RSDT], 4))
     return -EINVAL;
   if (!checksum_matches(root, root->length))
-    return -ECHK;
+    return -EINTEGRITY;
   /* map all the acpi tables in the RSDT */
   n_tbls = (root->length - sizeof(*root)) >> 2;
   paddrs = (uint32_t*)(root + 1);
@@ -138,7 +138,7 @@ acpi_init_xsdp(struct acpi_xsdp* xsdp) {
   if (!str_nequal(root->signature, known_tbls[ACPI_TABLE_XSDT], 4))
     return -EINVAL;
   if (!checksum_matches(root, root->length))
-    return -ECHK;
+    return -EINTEGRITY;
   /* map all the acpi tables in the XSDT */
   n_tbls = (root->length - sizeof(struct acpi_sdt_header)) >> 3;
   paddrs = (uint64_t*)(root + 1);

@@ -16,6 +16,6 @@ io_inb(uint16_t port) {
   return b;
 }
 
-#define IO_WAIT() io_outb(0x80, 0)
+#define IOWAIT() io_outb(0x80, 0)
 
 #endif

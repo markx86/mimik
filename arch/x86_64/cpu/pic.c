@@ -61,24 +61,24 @@ old_pic_remap(uint8_t off1, uint8_t off2) {
   pic2_mask = io_inb(PIC2_DATA);
 
   io_outb(PIC1_COMM, PIC_ICW1_INIT | PIC_ICW1_ICW4);
-  IO_WAIT();
+  IOWAIT();
   io_outb(PIC2_COMM, PIC_ICW1_INIT | PIC_ICW1_ICW4);
-  IO_WAIT();
+  IOWAIT();
 
   io_outb(PIC1_DATA, off1);
-  IO_WAIT();
+  IOWAIT();
   io_outb(PIC2_DATA, off2);
-  IO_WAIT();
+  IOWAIT();
 
   io_outb(PIC1_DATA, 1 << 2);
-  IO_WAIT();
+  IOWAIT();
   io_outb(PIC2_DATA, 1 << 1);
-  IO_WAIT();
+  IOWAIT();
 
   io_outb(PIC1_DATA, PIC_ICW4_8086);
-  IO_WAIT();
+  IOWAIT();
   io_outb(PIC2_DATA, PIC_ICW4_8086);
-  IO_WAIT();
+  IOWAIT();
 
   /* restore old interrupt masks */
   io_outb(PIC1_DATA, pic1_mask);
