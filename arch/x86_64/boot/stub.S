@@ -67,9 +67,7 @@ _fail:
 
 #define CPUID_FEATURES_MSR (1 << 5)
 #define CPUID_FEATURES_PAE (1 << 6)
-#define CPUID_FEATURES_SYSCALL (1 << 11)
 #define CPUID_FEATURES_LM (1 << 29)
-#define CPUID_FEATURES_NX (1 << 20)
 
 check_feature_support:
   /* 1. check if cpuid is supported */
@@ -106,12 +104,6 @@ check_feature_support:
   jz _fail
   /* 5. check if MSRs operations are supported */
   testl $CPUID_FEATURES_MSR, %edx
-  jz _fail
-  /* 6. check if syscall/sysret instructions are supported */
-  testl $CPUID_FEATURES_SYSCALL, %edx
-  jz _fail
-  /* 7. check if no-execute bit is supported */
-  testl $CPUID_FEATURES_NX, %edx
   jz _fail
   ret
 

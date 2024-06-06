@@ -37,7 +37,7 @@ CCFLAGS = \
 LDFLAGS = \
 	-nostdlib
 QEMUFLAGS = \
-	-cpu qemu64								\
+	-cpu qemu64,+ssse3,+sse4.1,+sse4.2		\
 	-smp cpus=1,cores=2,threads=2,maxcpus=4	\
 	-machine q35							\
 	-m 128M									\

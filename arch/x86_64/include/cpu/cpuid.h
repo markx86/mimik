@@ -5,6 +5,7 @@
 #include <util/compiler.h>
 
 #define CPUID_STDFN_00000001 0x00000001
+#define CPUID_EXTFN_80000001 0x80000001
 
 struct cpuid_regs {
   uint32_t eax;
