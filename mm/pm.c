@@ -31,7 +31,7 @@ static struct mem_bitmap* first_free_bitmap;
 static addr_t next_bitmap_page;
 /* Initial bitmap that tracks the first 128MB of memory */
 static struct mem_bitmap mem_bitmap0;
-static char mem_bitmap0_page[BITMAP_BYTES];
+static char pages_bitmap0[BITMAP_BYTES];
 
 #define TOBITMAP(a) ((a) >> 27)
 #define TOINDEX(a) (((a) & 0x7fff000) / PAGE_SIZE)
@@ -54,7 +54,7 @@ init_first_bitmap(void) {
   list_init(&mem_bitmaps);
   mem_bitmap0.index = 0;
   mem_bitmap0.first_free = 0;
-  mem_bitmap0.super = bitmap_from(BITMAP_SIZE, mem_bitmap0_page);
+  mem_bitmap0.super = bitmap_from(BITMAP_SIZE, pages_bitmap0);
   list_insert(&mem_bitmaps, &mem_bitmap0.link);
   first_free_bitmap = &mem_bitmap0;
 }
@@ -72,7 +72,7 @@ addr_t
 pm_request_page(void) {
   addr_t paddr;
   if (PAGE_SIZE > mem_info.free)
-    ASSERT(0); /* TODO: swapping */
+    ASSERT(0 && "Unimplemented"); /* TODO: swapping */
   paddr = TOPADDR(first_free_bitmap->index, first_free_bitmap->first_free++);
   ASSERT(pm_try_lock_page(paddr));
   return paddr;
@@ -82,18 +82,18 @@ addr_t
 pm_request_pages(size_t num) {
   struct mem_bitmap *mem_bitmap, *next;
   addr_t paddr;
-  status_t err;
+  status_t res;
   size_t start_index, index, found = 0;
   if (BYTES(num) > mem_info.free)
-    ASSERT(0); /* TODO: swapping */
+    ASSERT(0 && "Unimplemented"); /* TODO: swapping */
   mem_bitmap = first_free_bitmap;
   for (index = mem_bitmap->first_free, start_index = index;
        found < num && index < mem_bitmap->super.size;
        ++index) {
   retry:
-    err = bitmap_get(&mem_bitmap->super, index);
-    if (ISERROR(err)) {
-      ASSERT(err == -EINVAL);
+    res = bitmap_get(&mem_bitmap->super, index);
+    if (ISERROR(res)) {
+      ASSERT(res == -EINVAL);
       next = CONTAINEROF(mem_bitmap->link.next, struct mem_bitmap, link);
       if (next->index - mem_bitmap->index > 1) {
         found = 0;
@@ -103,7 +103,7 @@ pm_request_pages(size_t num) {
       mem_bitmap = next;
       goto retry;
     }
-    if (err == BITMAP_PAGEFREE)
+    if (res == BITMAP_PAGEFREE)
       ++found;
     else {
       start_index = index + 1;
@@ -165,12 +165,12 @@ find_bitmap_by_index(size_t index) {
 static bool_t
 find_first_free_index(void) {
   do {
-    status_t err =
+    status_t res =
         bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
-    if (ISERROR(err)) {
-      ASSERT(err == -EINVAL);
+    if (ISERROR(res)) {
+      ASSERT(res == -EINVAL);
       find_first_free_bitmap();
-    } else if (err == BITMAP_PAGEFREE)
+    } else if (res == BITMAP_PAGEFREE)
       return TRUE;
   } while (++first_free_bitmap->first_free < first_free_bitmap->super.size);
   return FALSE;

@@ -143,8 +143,10 @@ vm_init(void) {
 
 void
 vm_flush_tlb(void) {
-  ASM("movq %%cr3, %%rax" : : : "rax");
-  ASM("movq %%rax, %%cr3" : : : "rax");
+  ASM(
+    "movq %%cr3, %%rax;"
+    "movq %%rax, %%rax"
+    : : : "rax");
 }
 
 static addr_t
@@ -204,6 +206,7 @@ find_space(
   ASSERT(level < PT_NUM_LEVELS);
 
   strict = (flags & VM_MAP_STRICT) != 0;
+next_free_entry:
   *index = i;
   found_pages = 0;
   for (; found_pages < pages && i < PT_LENGTH && pt->entries[i].present; ++i) {
@@ -321,8 +324,8 @@ vm_map_pages(
   ASSERT(table != NULL);
   ASSERT(vaddr_hint != NULL);
   /* ensure the paddr is page aligned */
-  ASSERT((paddr_start & 0xfff) == 0);
-  ASSERT((*vaddr_hint & 0xfff) == 0);
+  ASSERT(ISPAGEALIGNED(paddr_start));
+  ASSERT(ISPAGEALIGNED(*vaddr_hint));
 
   vaddr_indices.address = *vaddr_hint;
 
@@ -434,7 +437,7 @@ vm_unmap_pages(ptr_t table, addr_t vaddr_start, size_t pages) {
 
   ASSERT(table != NULL);
   /* ensure the vaddr is aligned */
-  ASSERT((vaddr_start & 0xfff) == 0);
+  ASSERT(ISPAGEALIGNED(vaddr_start));
 
   vaddr_indices.address = vaddr_start;
 
@@ -510,4 +513,47 @@ vm_vaddr_to_paddr(ptr_t table, addr_t vaddr, addr_t* paddr) {
 status_t
 vm_kvaddr_to_paddr(addr_t vaddr, addr_t* paddr) {
   return vm_vaddr_to_paddr(pml4, vaddr, paddr);
+}
+
+static status_t
+recurse_set_backing(struct pt* pt, size_t* index, size_t level, addr_t paddr) {
+  status_t res;
+  addr_t pt_vaddr;
+  union pte* entry;
+
+  ASSERT(level < PT_NUM_LEVELS);
+
+  entry = &pt->entries[*index];
+  if (!entry->present)
+    return -ENOMAP;
+  if (level == PT_LAST_LEVEL) {
+    entry->bytes &= (addr_t)~0x000ffffffffff000;
+    entry->bytes |= paddr;
+    return SUCCESS;
+  }
+
+  pt_vaddr = map_page_tmp(PTEPADDR(entry), VM_MAP_WRITABLE);
+  res = recurse_set_backing((struct pt*)pt_vaddr, index + 1, level + 1, paddr);
+  unmap_page_tmp(pt_vaddr);
+
+  return res;
+}
+
+status_t vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr) {
+  size_t indices[4];
+  union vaddr vaddr_indices = { .address = vaddr };
+
+  ASSERT((vaddr & 0xfff) == 0);
+  ASSERT((paddr & 0xfff) == 0);
+
+  indices[0] = vaddr_indices.pml4_index;
+  indices[1] = vaddr_indices.pdp_index;
+  indices[2] = vaddr_indices.pd_index;
+  indices[3] = vaddr_indices.pt_index;
+
+  return recurse_set_backing(table, indices, 0, paddr);
+}
+
+status_t vm_kset_backing(addr_t vaddr, addr_t paddr) {
+  return vm_set_backing(pml4, vaddr, paddr);
 }
