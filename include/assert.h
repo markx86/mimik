@@ -15,4 +15,6 @@ void ATTRIBUTES(noreturn) _assert(
       _assert(__FILE__, __LINE__, #x); \
   } while (0)
 
+#define STATICASSERT(x, m) _Static_assert(x, m)
+
 #endif

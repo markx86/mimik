@@ -1,272 +1,167 @@
 #include <mm/mm.h>
 #include <mm/pm.h>
-#include <mm/vm.h>
-#include <util/align.h>
-#include <util/compiler.h>
+#include <mem/mem.h>
 #include <log/log.h>
-#include <kernel.h>
+#include <structs/list.h>
 #include <assert.h>
+#include <kernel.h>
 
-#define HEADER_MAGIC0 'H'
-#define HEADER_MAGIC1 'D'
-#define HEADER_MAGIC2 'R'
+#define SLAB_GROW_SIZE PAGE_SIZE
 
-#define MIN_GROW_PAGES 8
-#define MIN_BLOCK_SIZE 64
-
-#define ISHEADER(x)                                                    \
-  ((x)->magic[0] == HEADER_MAGIC0 && (x)->magic[1] == HEADER_MAGIC1 && \
-   (x)->magic[2] == HEADER_MAGIC2)
-#define NEXTBLOCK(x) ((struct header*)((addr_t)(x) + (x)->size))
-
-struct PACKED header {
-  char magic[3];
-  bool_t free;
-  uint32_t size;
-  struct header* prev;
+enum slab_type {
+  SLAB_16 = 0,
+  SLAB_24,
+  SLAB_32,
+  SLAB_48,
+  SLAB_64,
+  SLAB_96,
+  SLAB_128,
+  SLAB_192,
+  SLAB_256,
+  SLAB_384,
+  SLAB_512,
+  SLAB_768,
+  SLAB_1024,
+  SLAB_2048,
+  SLAB_3072,
+  SLAB_4096,
+  SLAB_MAX
 };
 
-static addr_t heap_end, heap_start = KERNEL_HEAP_START;
-static struct header *first_free, *last_block;
+STATICASSERT(SLAB_MAX <= 0x10, "wow");
 
-void
-mm_init(void) {
-  status_t res;
-  addr_t paddr = pm_request_pages(MIN_GROW_PAGES);
-  res = vm_kmap_pages(paddr, MIN_GROW_PAGES, &heap_start, VM_MAP_WRITABLE);
-  ASSERT(res == SUCCESS);
-  first_free = (struct header*)heap_start;
-  first_free->magic[0] = HEADER_MAGIC0;
-  first_free->magic[1] = HEADER_MAGIC1;
-  first_free->magic[2] = HEADER_MAGIC2;
-  first_free->free = TRUE;
-  first_free->size = BYTES(MIN_GROW_PAGES);
-  first_free->prev = NULL;
-  last_block = first_free;
-  heap_end = heap_start + first_free->size;
+struct slab {
+  enum slab_type type;
+  struct list freelist;
+  addr_t start;
+  addr_t end;
+};
+
+#define SLABTYPE(addr) (((addr) >> 36) & 0xffff)
+#define SLABBASE(type) (KERNEL_HEAP_START + ((addr_t)(type) << 36))
+
+static struct slab slabs[SLAB_MAX];
+
+void mm_init(void) {
+  size_t i;
+  struct slab* s;
+  for (i = 0; i < SLAB_MAX; ++i) {
+    s = slabs + i;
+    s->type = (enum slab_type)i;
+    s->end = s->start = SLABBASE(s->type);
+    list_init(&s->freelist);
+  }
   LOGSUCCESS("kernel heap initialized");
 }
 
-static void
-grow_heap(size_t sz) {
-  status_t res;
-  addr_t paddr;
-  size_t bytes, pages = PAGES(sz);
-  pages = pages >= MIN_GROW_PAGES ? pages : MIN_GROW_PAGES;
-  /* verify that the end of the last block in the heap,
-           aligns with the end of the heap */
-  ASSERT((addr_t)NEXTBLOCK(last_block) == heap_end);
-  /* map more memory */
-  paddr = pm_request_pages(pages);
-  res = vm_kmap_pages(paddr, pages, &heap_end, VM_MAP_WRITABLE | VM_MAP_STRICT);
-  ASSERT(res == SUCCESS); /* TODO: handle out of virtual memory exception */
-  heap_end += BYTES(pages);
-  /* if the last_block is not free, append a new block */
-  if (!last_block->free) {
-    struct header* new_block = NEXTBLOCK(last_block);
-    new_block->magic[0] = HEADER_MAGIC0;
-    new_block->magic[1] = HEADER_MAGIC1;
-    new_block->magic[2] = HEADER_MAGIC2;
-    new_block->free = TRUE;
-    new_block->size = 0; /* NOTE: the size is set after the if block */
-    new_block->prev = last_block;
-    last_block = new_block;
-  }
-  /* update the last block's size */
-  bytes = BYTES(pages);
-  ASSERT(bytes < UINT32_MAX);
-  last_block->size += (uint32_t)bytes;
+static inline size_t round_to_power_of_2(size_t sz) {
+  --sz;
+  sz |= sz >> 1;
+  sz |= sz >> 2;
+  sz |= sz >> 4;
+  sz |= sz >> 8;
+  sz |= sz >> 16;
+  sz |= sz >> 32;
+  return ++sz;
 }
 
-static struct header*
-find_worst_fit(size_t size) {
-  struct header *best_hdr, *hdr = first_free;
-  best_hdr = NULL;
-  /* loop through every block */
-  while (hdr <= last_block) {
-    ASSERT(ISHEADER(hdr));
-    /* ensure the block is free and has enough size */
-    if (!hdr->free || hdr->size < size)
-      goto next_block;
-    /* check if this block is better than the best block size */
-    if (best_hdr == NULL || best_hdr->size < hdr->size)
-      best_hdr = hdr;
-  next_block:
-    hdr = NEXTBLOCK(hdr);
+/* FIXME: this shit is ugly af, can't we just do a look-up table, please? */
+static inline size_t slab_size(enum slab_type type) {
+  size_t sz, shift = ((type & 0xe) >> 1) + 4;
+  sz = 1 << shift--;
+  if (type & 1)
+    sz += 1 << shift;
+  if (UNLIKELY(sz > 1024)) {
+    sz += 512;
+    if (UNLIKELY(sz > 2048))
+      sz += 512;
   }
-  /* return the best block or grow the heap if none was found */
-  if (best_hdr != NULL)
-    return best_hdr;
-  grow_heap(size);
-  ASSERT(last_block->free);
-  return last_block;
+  return sz;
 }
 
-static void
-split_free_block_at_size(struct header* block, size_t sz) {
-  struct header* next;
-  /* verify the block is free */
-  ASSERT(block->free);
-  /* verify the size of the new block is at least the minimum allowed */
-  ASSERT(sz >= MIN_BLOCK_SIZE);
-
-  next = (struct header*)((addr_t)block + sz);
-  /* check that the next block will fit on the heap */
-  if ((addr_t)next + MIN_BLOCK_SIZE > heap_end)
-    grow_heap(0); /* 0 == grow the heap by MIN_GROW_PAGES */
-
-  /* update first free and last block */
-  if (block == first_free)
-    first_free = next;
-  if (block == last_block)
-    last_block = next;
-
-  /* initialize the new block */
-  next->free = TRUE;
-  next->size = (uint32_t)(block->size - sz);
-  ASSERT(next->size >= MIN_BLOCK_SIZE);
-  next->magic[0] = HEADER_MAGIC0;
-  next->magic[1] = HEADER_MAGIC1;
-  next->magic[2] = HEADER_MAGIC2;
-  next->prev = block;
-
-  /* update the block size */
-  block->size = (uint32_t)sz;
+static inline struct slab* get_slab_from_size(size_t sz) {
+  enum slab_type type;
+  size_t chunk_sz = round_to_power_of_2(sz);
+  chunk_sz >>= 4;
+  for (type = 0; chunk_sz > 0; ++type)
+    chunk_sz >>= 1;
+  /* check if the object can fit in a smaller bin
+     (eg. select 64 bytes bin by rounding up,
+     but the object can fit in 48 bytes bin) */
+  if (slab_size(type - 1) >= sz)
+    --type;
+  ASSERT(type < SLAB_MAX);
+  return slabs + type;
 }
 
-ptr_t
-mm_alloc(size_t sz) {
-  struct header* hdr;
-  ASSERT(sz <= UINT32_MAX);
-  /* the size of the block is the size of the allocation
-     plus the size of the block header */
-  sz += sizeof(*hdr);
-  /* make sure the block is at least the minimum size */
-  sz = sz >= MIN_BLOCK_SIZE ? sz : MIN_BLOCK_SIZE;
-  hdr = find_worst_fit(sz);
-  /* truncate the selected block to size */
-  split_free_block_at_size(hdr, sz);
-  hdr->free = FALSE;
-  return hdr + 1;
+static void alloc_slab(struct slab* s) {
+  struct list* chunk;
+  size_t chunk_size;
+  addr_t p, next;
+
+  ASSERT(s->type < SLAB_MAX);
+
+  p = (addr_t)mm_map(PAGEALIGNUP(s->end), SLAB_GROW_SIZE, VM_MAP_WRITABLE | VM_MAP_STRICT);
+  ASSERT(p != 0);
+
+  chunk_size = slab_size(s->type);
+  p += SLAB_GROW_SIZE;
+  for (next = s->end + chunk_size; next < p; next += chunk_size) {
+    chunk = (struct list*)s->end;
+    list_insert(&s->freelist, chunk);
+    s->end = next;
+  }
 }
 
-static struct header*
-find_most_aligned(size_t sz, size_t al) {
-  size_t best_offset;
-  struct header *best_hdr, *hdr = first_free;
-  best_hdr = NULL;
-  best_offset = al;
-  /* loop through every block */
-  while (hdr <= last_block) {
-    size_t offset, needed_size;
-    /* verify the header is valid */
-    ASSERT(ISHEADER(hdr));
-    /* ensure the header is free */
-    if (!hdr->free)
-      goto next_block;
-    /* compute the offset of the aligned pointer from the end of the header */
-    offset = (addr_t)(hdr + 1);
-    offset = ALIGNUP(offset, al) - offset;
-    /* compute the block size needed */
-    needed_size = sz + offset;
-    if (offset == 0)
-      needed_size += sizeof(struct header*);
-    needed_size = needed_size >= MIN_BLOCK_SIZE ? needed_size : MIN_BLOCK_SIZE;
-    /* ensure there's enough space in the block */
-    if (hdr->size < needed_size)
-      goto next_block;
-    /* check if there's enough extra space for the pointer to the header */
-    if (offset != 0 && offset < sizeof(struct header*))
-      goto next_block;
-    /* check if this block is better than the best one found */
-    if (best_hdr != NULL &&
-        (best_offset < offset ||
-         (best_offset == offset && best_hdr->size > hdr->size)))
-      goto next_block;
-    best_hdr = hdr;
-    best_offset = offset;
-  next_block:
-    hdr = NEXTBLOCK(hdr);
-  }
-  /* return the best block found or grow the heap and retry */
-  if (best_hdr != NULL)
-    return best_hdr;
-  grow_heap(sz);
-  ASSERT(last_block->free);
-  return last_block;
+ptr_t mm_alloc(size_t sz) {
+  struct slab* slab;
+  struct list* chunk;
+  ASSERT(sz < slab_size(SLAB_MAX - 1));
+  slab = get_slab_from_size(sz);
+  if (list_length(&slab->freelist) == 0)
+    alloc_slab(slab);
+  chunk = slab->freelist.next;
+  list_remove(chunk);
+  return chunk;
 }
 
-ptr_t
-mm_aligned_alloc(size_t sz, size_t al) {
-  ptr_t ptr;
-  size_t actual_size;
-  struct header *hdr, **hdr_ptr;
-  ASSERT(sz <= UINT32_MAX);
-  /* find the header with the least amount of space wasted on alignment */
-  hdr = find_most_aligned(sz, al);
-  /* compute the data pointer */
-  ptr = (ptr_t)ALIGNUP((addr_t)(hdr + 1), al);
-  /* if needed, insert pointer to the header before the data pointer */
-  if ((addr_t)ptr > (addr_t)(hdr + 1)) {
-    hdr_ptr = (struct header**)ptr - 1;
-    *hdr_ptr = hdr;
-  }
-  /* compute the actual block size used */
-  actual_size = ((addr_t)ptr + sz) - (addr_t)hdr;
-  /* truncate the block to actual_size */
-  split_free_block_at_size(hdr, actual_size);
-  hdr->free = FALSE;
-  return ptr;
+static inline struct slab* get_slab_from_address(addr_t addr) {
+  struct slab* s;
+  size_t sz;
+  enum slab_type type = SLABTYPE(addr);
+  ASSERT(type < SLAB_MAX);
+  s = slabs + type;
+  sz = slab_size(type);
+  /* verify that the address lies within the slab bounds */
+  ASSERT(addr >= s->start && addr + sz < s->end);
+  /* ensure the address is aligned to the slab object size */
+  ASSERT((addr & (sz-1)) == 0);
+  return s;
 }
 
-static void
-join_free_backwards(struct header* this) {
-  struct header* next;
-  ASSERT(ISHEADER(this));
-  /* nothing to join if this header is not free */
-  if (!this->free)
-    return;
-  /* can't join backwards if there's no previous block
-     or if it is not free */
-  if (this->prev == NULL || !this->prev->free)
-    return;
-  this->prev->size += this->size;
-  /* if this was the last block,
-     make the newly formed block the last one */
-  if (this == last_block) {
-    last_block = this->prev;
-    return;
-  }
-  /* if it is not update the prev pointer for the next block */
-  next = NEXTBLOCK(this);
-  ASSERT(ISHEADER(next));
-  next->prev = this->prev;
-}
-
-void
-mm_free(ptr_t* alloc) {
-  struct header* hdr;
-  ASSERT(alloc != NULL);
-  ASSERT(*alloc != NULL);
-  hdr = (struct header*)*alloc - 1;
-  if (!ISHEADER(hdr)) {
-    /* assume the allocation is aligned */
-    hdr = *((struct header**)*alloc - 1);
-    /* verify the header address is valid */
-    ASSERT((addr_t)hdr >= heap_start);
-    ASSERT((addr_t)(hdr + 1) < heap_end);
-  }
-  ASSERT(ISHEADER(hdr));
-  /* flag this block as free */
-  hdr->free = TRUE;
-  if (hdr != last_block) {
-    /* update first_free if needed */
-    if (first_free > hdr)
-      first_free = hdr;
-    /* try joining the block with the next one */
-    join_free_backwards(NEXTBLOCK(hdr));
-  }
-  /* try joining the block with the previous one */
-  join_free_backwards(hdr);
+void mm_free(ptr_t* alloc) {
+  struct slab* slab = get_slab_from_address((addr_t)*alloc);
+  mem_set(*alloc, 0, slab_size(slab->type)); /* clear chunk data */
+  list_insert(&slab->freelist, (struct list*)*alloc);
   *alloc = NULL;
+}
+
+ptr_t mm_map(addr_t hint, size_t size, enum vm_map_flags flags) {
+  size_t pages;
+  status_t res;
+  addr_t paddr, vaddr;
+
+  pages = PAGES(size);
+  res = vm_kreserve_pages(&hint, pages, flags);
+  if (ISERROR(res))
+    return NULL;
+
+  for (vaddr = hint; pages > 0; --pages) {
+    paddr = pm_request_page();
+    res = vm_kset_backing(vaddr, paddr);
+    ASSERT(res == SUCCESS);
+    vaddr += PAGE_SIZE;
+  }
+
+  return (ptr_t)hint;
 }

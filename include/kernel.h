@@ -22,6 +22,6 @@ extern char _kernel_vaddr_start[];
 extern char _kernel_vaddr_end[];
 #define KERNEL_END_VADDR ((addr_t)_kernel_vaddr_end)
 
-#define KERNEL_HEAP_START 0xffffff8000000000
+#define KERNEL_HEAP_START 0xffff800000000000
 
 #endif
