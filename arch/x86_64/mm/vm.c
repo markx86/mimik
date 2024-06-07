@@ -109,19 +109,19 @@ unmap_page_tmp(addr_t vaddr) {
 
 void
 vm_init(void) {
-  size_t* indices;
+  size_t *indices, i;
   struct pt* pt;
-  union vaddr i = {.address = PT_TMP_START_VADDR};
+  union vaddr v = {.address = PT_TMP_START_VADDR};
 
   /* indices[3] (which is i.pt_index) is unused */
-  indices = (size_t[4]){i.pml4_index, i.pdp_index, i.pd_index, i.pt_index};
+  indices = (size_t[4]){v.pml4_index, v.pdp_index, v.pd_index, v.pt_index};
 
   pml4 = (struct pt*)(get_pml4_paddr() + HIGHER_HALF);
   mem_set(&tmp_pt, 0, sizeof(struct pt));
 
   /* setup mapping path to the temporary page table's entries */
   pt = pml4;
-  for (size_t i = 0; i < PT_LAST_LEVEL; ++i) {
+  for (i = 0; i < PT_LAST_LEVEL; ++i) {
     if (pt->entries[*indices].present && pt != &tmp_pt)
       pt = (struct pt*)(PTEPADDR(&pt->entries[*indices]) + HIGHER_HALF);
     else {
@@ -199,9 +199,11 @@ find_space(
     addr_t paddr_start,
     size_t pages,
     enum vm_map_flags flags) {
+  status_t res;
   bool_t strict;
   addr_t pt_vaddr, paddr;
   size_t pages_per_entry, found_pages, i = *index;
+  union pte* e;
 
   ASSERT(level < PT_NUM_LEVELS);
 
@@ -210,7 +212,6 @@ next_free_entry:
   *index = i;
   found_pages = 0;
   for (; found_pages < pages && i < PT_LENGTH && pt->entries[i].present; ++i) {
-    status_t res;
     if (level == PT_LAST_LEVEL) {
       if (strict)
         return -EOVERLAP;
@@ -250,7 +251,7 @@ next_free_entry:
   pages_per_entry = get_pages_per_entry(level);
   paddr = paddr_start;
   for (; found_pages < pages && i < PT_LENGTH; ++i) {
-    union pte* e = &pt->entries[i];
+    e = &pt->entries[i];
     if (e->present && (PTEPADDR(e) != paddr || !pte_flags_match(e, flags)))
       break;
     found_pages += pages_per_entry;
@@ -274,12 +275,13 @@ recurse_map(
     addr_t* paddr,
     size_t* pages,
     enum vm_map_flags flags) {
+  size_t i;
+  addr_t pt_vaddr;
+  status_t res;
+  
   ASSERT(level < PT_NUM_LEVELS);
 
-  for (size_t i = *index; i < PT_LENGTH && *pages > 0; ++i) {
-    size_t pt_vaddr;
-    status_t res;
-
+  for (i = *index; i < PT_LENGTH && *pages > 0; ++i) {
     if (level == PT_LAST_LEVEL) {
       if (pt->entries[i].present)
         continue;
@@ -346,6 +348,7 @@ vm_map_pages(
   vaddr_indices.pdp_index = indices[1] & 0x1ff;
   vaddr_indices.pd_index = indices[2] & 0x1ff;
   vaddr_indices.pt_index = indices[3] & 0x1ff;
+  /* sign extend if needed */
   if (indices[0] & 0x100)
     vaddr_indices.address |= (addr_t)0xffff << 48;
   *vaddr_hint = vaddr_indices.address;

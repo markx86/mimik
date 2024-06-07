@@ -39,9 +39,11 @@ static char pages_bitmap0[BITMAP_BYTES];
 
 static void
 compute_mem_size(struct bootinfo_mem_map* mem_map) {
+  size_t i;
+  struct bootinfo_mem_segment* segment;
   mem_set(&mem_info, 0, sizeof(mem_info));
-  for (size_t i = 0; i < mem_map->entries; ++i) {
-    struct bootinfo_mem_segment* segment = &mem_map->segments[i];
+  for (i = 0; i < mem_map->entries; ++i) {
+    segment = &mem_map->segments[i];
     mem_info.free += segment->length;
     if (segment->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED &&
         TOBITMAP(segment->addr) == 0)
@@ -164,8 +166,9 @@ find_bitmap_by_index(size_t index) {
 
 static bool_t
 find_first_free_index(void) {
+  status_t res;
   do {
-    status_t res =
+    res =
         bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
     if (ISERROR(res)) {
       ASSERT(res == -EINVAL);
@@ -192,8 +195,9 @@ try_set_page(addr_t paddr, bool_t state) {
 
 bool_t
 pm_try_lock_page(addr_t paddr) {
+  size_t bitmap;
   if (try_set_page(paddr, BITMAP_PAGELOCKED)) {
-    size_t bitmap = TOBITMAP(paddr);
+    bitmap = TOBITMAP(paddr);
     if (first_free_bitmap->index == bitmap && !find_first_free_index())
       find_first_free_bitmap();
     mem_info.used += PAGE_SIZE;
@@ -205,13 +209,13 @@ pm_try_lock_page(addr_t paddr) {
 
 bool_t
 pm_try_lock_pages(addr_t paddr, size_t bytes) {
-  size_t pages;
+  size_t pages, page;
   bool_t no_collisions;
   if (bytes == 0)
     return pm_try_lock_page(paddr);
   pages = PAGES(bytes);
   no_collisions = TRUE;
-  for (size_t page = 0; page < pages; ++page) {
+  for (page = 0; page < pages; ++page) {
     no_collisions &= pm_try_lock_page(paddr);
     paddr += PAGE_SIZE;
   }
@@ -220,8 +224,9 @@ pm_try_lock_pages(addr_t paddr, size_t bytes) {
 
 bool_t
 pm_try_release_page(addr_t paddr) {
+  size_t index, bitmap;
   if (try_set_page(paddr, BITMAP_PAGEFREE)) {
-    size_t index, bitmap = TOBITMAP(paddr);
+    bitmap = TOBITMAP(paddr);
     if (bitmap < first_free_bitmap->index)
       first_free_bitmap = find_bitmap_by_index(bitmap);
     if (bitmap == first_free_bitmap->index &&
@@ -236,13 +241,13 @@ pm_try_release_page(addr_t paddr) {
 
 bool_t
 pm_try_release_pages(addr_t paddr, size_t bytes) {
-  size_t pages;
+  size_t pages, page;
   bool_t no_collisions;
   if (bytes == 0)
     return pm_try_release_page(paddr);
   pages = PAGES(bytes);
   no_collisions = TRUE;
-  for (size_t page = 0; page < pages; ++page) {
+  for (page = 0; page < pages; ++page) {
     no_collisions |= pm_try_release_page(paddr);
     paddr += PAGE_SIZE;
   }

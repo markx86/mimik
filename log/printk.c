@@ -16,14 +16,14 @@ struct print_flags {
 
 static void
 print_unsigned(size_t zeros, uint64_t n) {
-  size_t i;
+  size_t i, j;
   char cs[BUF_SIZE];
   ASSERT(zeros <= sizeof(cs));
   for (i = 0; n > 0; n /= 10, ++i) {
     ASSERT(i < sizeof(cs));
     cs[i] = (char)(n % 10) + '0';
   }
-  for (size_t j = i; j < zeros; ++j)
+  for (j = i; j < zeros; ++j)
     putc('0');
   for (; i > 0; --i)
     putc(cs[i - 1]);
@@ -40,18 +40,19 @@ print_decimal(size_t zeros, int64_t n) {
 
 static void
 print_hex(size_t zeros, uint64_t n, bool_t cap) {
-  size_t i;
+  size_t i, j;
+  uint8_t d;
   char cs[BUF_SIZE];
   char base = cap ? 'A' : 'a';
   for (i = 0; n > 0; n >>= 4, ++i) {
-    uint8_t d = n & 0xf;
+    d = n & 0xf;
     ASSERT(i < sizeof(cs));
     if (d < 10)
       cs[i] = (char)(d + '0');
     else
       cs[i] = (char)(d - 10) + base;
   }
-  for (size_t j = i; j < zeros; ++j)
+  for (j = i; j < zeros; ++j)
     putc('0');
   for (; i > 0; --i)
     putc(cs[i - 1]);

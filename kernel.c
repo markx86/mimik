@@ -11,14 +11,17 @@ struct kernel_config kcfg;
 
 static void
 parse_bootinfo(struct bootinfo* bootinfo) {
+  char* s;
+  struct bootinfo_module* module;
+
   kcfg.bootinfo = bootinfo;
 
   /* Parse cmdline. */
-  for (char* s = bootinfo->cmdline; *s != '\0'; s++) {
+  for (s = bootinfo->cmdline; *s != '\0'; s++) {
   }
 
   /* Find modules. */
-  for (struct bootinfo_module* module = bootinfo->modules; module != NULL;
+  for (module = bootinfo->modules; module != NULL;
        module = module->next) {
     kcfg.fs = initfs_from_module(module);
     /* TODO: support other modules */
@@ -39,7 +42,5 @@ kernel_main(
   /* TODO: initialize PIC and mask all interrupts */
   int_enable();
   parse_bootinfo(bootinfo);
-  for (;;)
-    ;
   ASSERT(0 && "Hello from MIMIK!");
 }

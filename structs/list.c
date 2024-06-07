@@ -29,9 +29,10 @@ list_remove(struct list* elem) {
 
 size_t
 list_length(struct list* list) {
-  ASSERT(list != NULL);
+  struct list* elem;
   size_t len = 0;
-  for (struct list* elem = list->next; elem != list; elem = elem->next)
+  ASSERT(list != NULL);
+  for (elem = list->next; elem != list; elem = elem->next)
     ++len;
   return len;
 }
