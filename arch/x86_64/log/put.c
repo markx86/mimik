@@ -20,7 +20,7 @@
 
 #define BAUD_MAX 115200
 #define BAUD_TGT 115200
-#define DIVISOR (BAUD_MAX / BAUD_TGT)
+#define DIVISOR  (BAUD_MAX / BAUD_TGT)
 
 enum data_bits {
   DATA_BITS_5 = 0b00,
@@ -44,11 +44,11 @@ enum parity {
 
 union lcr {
   struct {
-    uint8_t data_bits : 2;
-    uint8_t stop_bit : 1;
-    uint8_t parity : 3;
+    uint8_t data_bits           : 2;
+    uint8_t stop_bit            : 1;
+    uint8_t parity              : 3;
     uint8_t break_signal_enable : 1;
-    uint8_t dlab : 1;
+    uint8_t dlab                : 1;
   };
   uint8_t raw;
 };
@@ -67,25 +67,25 @@ enum fifo_size {
 
 union fcr {
   struct {
-    uint8_t enable_fifo : 1;
+    uint8_t enable_fifo   : 1;
     uint8_t clear_rx_fifo : 1;
     uint8_t clear_tx_fifo : 1;
     uint8_t fifo_dma_mode : 1;
-    uint8_t reserved : 2;
-    uint8_t fifo_size : 2;
+    uint8_t reserved      : 2;
+    uint8_t fifo_size     : 2;
   };
   uint8_t raw;
 };
 
 union lsr {
   struct {
-    uint8_t data_available : 1;
-    uint8_t overrun_error : 1;
-    uint8_t parity_error : 1;
-    uint8_t framing_error : 1;
-    uint8_t break_signal_received : 1;
-    uint8_t thr_is_empty : 1;
-    uint8_t thr_is_empty_and_idle : 1;
+    uint8_t data_available         : 1;
+    uint8_t overrun_error          : 1;
+    uint8_t parity_error           : 1;
+    uint8_t framing_error          : 1;
+    uint8_t break_signal_received  : 1;
+    uint8_t thr_is_empty           : 1;
+    uint8_t thr_is_empty_and_idle  : 1;
     uint8_t erroneous_data_in_fifo : 1;
   };
   uint8_t raw;

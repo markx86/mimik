@@ -12,20 +12,20 @@
 #define PIC1_DATA (PIC1 + 1)
 #define PIC2_DATA (PIC1 + 1)
 
-#define PIC_EOI 0x20
+#define PIC_EOI     0x20
 #define PIC_DISABLE 0xff
 
-#define PIC_ICW1_ICW4 0x01
-#define PIC_ICW1_SINGLE 0x02
+#define PIC_ICW1_ICW4      0x01
+#define PIC_ICW1_SINGLE    0x02
 #define PIC_ICW1_INTERVAL4 0x04
-#define PIC_ICW1_LEVEL 0x08
-#define PIC_ICW1_INIT 0x10
+#define PIC_ICW1_LEVEL     0x08
+#define PIC_ICW1_INIT      0x10
 
-#define PIC_ICW4_8086 0x01
-#define PIC_ICW4_AUTO 0x02
-#define PIC_ICW4_BUFSLAVE 0x08
+#define PIC_ICW4_8086      0x01
+#define PIC_ICW4_AUTO      0x02
+#define PIC_ICW4_BUFSLAVE  0x08
 #define PIC_ICW4_BUFMASTER 0x0c
-#define PIC_ICW4_SFNM 0x10
+#define PIC_ICW4_SFNM      0x10
 
 struct pic_actions {
   void (*ack)(uint8_t);

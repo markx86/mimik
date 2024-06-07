@@ -9,7 +9,8 @@
 #include <util/compiler.h>
 #include <util/align.h>
 
-static inline uint32_t crc32c(uint32_t crc, ptr_t buf, size_t len) {
+static inline uint32_t
+crc32c(uint32_t crc, ptr_t buf, size_t len) {
   size_t q;
   uint8_t* pb;
   uint64_t* pq = buf;

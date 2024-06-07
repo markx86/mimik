@@ -51,11 +51,11 @@ typedef void* ptr_t;
 #define NULL ((ptr_t)0)
 
 typedef uint8_t bool_t;
-#define TRUE 1
+#define TRUE  1
 #define FALSE 0
 
 typedef int64_t status_t;
-#define SUCCESS 0
+#define SUCCESS    0
 #define ISERROR(e) ((e) < 0)
 
 #endif

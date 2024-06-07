@@ -8,10 +8,10 @@
 #include <assert.h>
 #include <kernel.h>
 
-#define BITMAP_BYTES PAGE_SIZE
-#define BITMAP_SIZE (BITMAP_BYTES << 3)
+#define BITMAP_BYTES      PAGE_SIZE
+#define BITMAP_SIZE       (BITMAP_BYTES << 3)
 #define BITMAP_PAGELOCKED TRUE
-#define BITMAP_PAGEFREE FALSE
+#define BITMAP_PAGEFREE   FALSE
 
 struct mem_info {
   size_t used;
@@ -33,8 +33,8 @@ static addr_t next_bitmap_page;
 static struct mem_bitmap mem_bitmap0;
 static char pages_bitmap0[BITMAP_BYTES];
 
-#define TOBITMAP(a) ((a) >> 27)
-#define TOINDEX(a) (((a) & 0x7fff000) / PAGE_SIZE)
+#define TOBITMAP(a)   ((a) >> 27)
+#define TOINDEX(a)    (((a) & 0x7fff000) / PAGE_SIZE)
 #define TOPADDR(b, i) (((b) << 27) + (i) * PAGE_SIZE)
 
 static void
@@ -168,8 +168,7 @@ static bool_t
 find_first_free_index(void) {
   status_t res;
   do {
-    res =
-        bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
+    res = bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
     if (ISERROR(res)) {
       ASSERT(res == -EINVAL);
       find_first_free_bitmap();

@@ -21,8 +21,7 @@ parse_bootinfo(struct bootinfo* bootinfo) {
   }
 
   /* Find modules. */
-  for (module = bootinfo->modules; module != NULL;
-       module = module->next) {
+  for (module = bootinfo->modules; module != NULL; module = module->next) {
     kcfg.fs = initfs_from_module(module);
     /* TODO: support other modules */
     break;

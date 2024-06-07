@@ -14,22 +14,24 @@ check_and_enable_features(void) {
      and supports all the legacy SIMD instructions */
   ASSERT(r.edx & (1 << 25)); /* check for SSE1   support */
   ASSERT(r.edx & (1 << 26)); /* check for SSE2   support */
-  ASSERT(r.ecx & (1 <<  0)); /* check for SSE3   support */
-  ASSERT(r.ecx & (1 <<  9)); /* check for SSSE3  support */
+  ASSERT(r.ecx & (1 << 0));  /* check for SSE3   support */
+  ASSERT(r.ecx & (1 << 9));  /* check for SSSE3  support */
   ASSERT(r.ecx & (1 << 19)); /* check for SSE4.1 support */
   ASSERT(r.ecx & (1 << 20)); /* check for SSE4.2 support */
   /* enable legacy SIMD instructions */
   ASM(
-    /* set CR4.OSFXSR = 1 */
-    "mov %%cr4, %%rax;"
-    "or $(1 << 9), %%rax;"
-    "mov %%rax, %%cr4;"
-    /* set CR0.EM = 0 and CR0.MP = 1 */
-    "mov %%cr0, %%rax;"
-    "and $~(1 << 2), %%rax;"
-    "or $(1 << 1), %%rax;"
-    "mov %%rax, %%cr0"
-    : : : "rax");
+      /* set CR4.OSFXSR = 1 */
+      "mov %%cr4, %%rax;"
+      "or $(1 << 9), %%rax;"
+      "mov %%rax, %%cr4;"
+      /* set CR0.EM = 0 and CR0.MP = 1 */
+      "mov %%cr0, %%rax;"
+      "and $~(1 << 2), %%rax;"
+      "or $(1 << 1), %%rax;"
+      "mov %%rax, %%cr0"
+      :
+      :
+      : "rax");
 
   cpuid(CPUID_EXTFN_80000001, &r);
   /* NOTE: we'll need NX bit support and SYSCALL/SYSRET support */

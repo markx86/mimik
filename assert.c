@@ -15,11 +15,7 @@ _assert(const char* file, size_t line, const char* expr) {
   }
   file += (size_t)(root - this_file);
 
-  LOGFATAL(
-      "(%s:%lu) assertion failed: %s\n",
-      file,
-      line,
-      expr);
+  LOGFATAL("(%s:%lu) assertion failed: %s\n", file, line, expr);
 
   while (TRUE)
     ASM("hlt");

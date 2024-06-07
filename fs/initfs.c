@@ -88,9 +88,7 @@ initfs_lookup(
       *file_ptr = hdr + 1;
       return SUCCESS;
     }
-    hdr = (struct ustar_header*)ALIGNUP(
-        (addr_t)(hdr + 1) + sz,
-        sizeof(*hdr));
+    hdr = (struct ustar_header*)ALIGNUP((addr_t)(hdr + 1) + sz, sizeof(*hdr));
   }
   return -ENOENT;
 }

@@ -10,18 +10,18 @@
 
 union pte {
   struct PACKED {
-    uint64_t present : 1;
-    uint64_t writable : 1;
+    uint64_t present         : 1;
+    uint64_t writable        : 1;
     uint64_t user_accessible : 1;
-    uint64_t write_through : 1;
-    uint64_t cache_disable : 1;
-    uint64_t accessed : 1;
-    uint64_t dirty : 1;
-    uint64_t is_big : 1;
-    uint64_t global : 1;
-    uint64_t available : 3;
-    uint64_t reserved : 51;
-    uint64_t no_execute : 1;
+    uint64_t write_through   : 1;
+    uint64_t cache_disable   : 1;
+    uint64_t accessed        : 1;
+    uint64_t dirty           : 1;
+    uint64_t is_big          : 1;
+    uint64_t global          : 1;
+    uint64_t available       : 3;
+    uint64_t reserved        : 51;
+    uint64_t no_execute      : 1;
   };
   uint64_t bytes;
 };
@@ -29,24 +29,24 @@ union pte {
 union vaddr {
   struct PACKED {
     uint64_t offset_in_page : 12;
-    uint64_t pt_index : 9;
-    uint64_t pd_index : 9;
-    uint64_t pdp_index : 9;
-    uint64_t pml4_index : 9;
+    uint64_t pt_index       : 9;
+    uint64_t pd_index       : 9;
+    uint64_t pdp_index      : 9;
+    uint64_t pml4_index     : 9;
     uint64_t sign_extension : 16;
   };
   addr_t address;
 };
 
-#define PT_LENGTH 512
-#define PT_SIZE PAGE_SIZE
+#define PT_LENGTH          512
+#define PT_SIZE            PAGE_SIZE
 #define PT_TMP_START_VADDR 0xffffffffffe00000
-#define PT_NUM_LEVELS 4
-#define PT_LAST_LEVEL (PT_NUM_LEVELS - 1)
+#define PT_NUM_LEVELS      4
+#define PT_LAST_LEVEL      (PT_NUM_LEVELS - 1)
 
 #define PTEPADDR(pte) ((pte)->bytes & 0x000ffffffffff000)
 
-#define ISFLAGSET(flags, flag) ((flags & VM_MAP_##flag) != 0)
+#define ISFLAGSET(flags, flag)   ((flags & VM_MAP_##flag) != 0)
 #define ISFLAGUNSET(flags, flag) ((flags & VM_MAP_##flag) == 0)
 
 struct pt {
@@ -143,10 +143,11 @@ vm_init(void) {
 
 void
 vm_flush_tlb(void) {
-  ASM(
-    "movq %%cr3, %%rax;"
-    "movq %%rax, %%rax"
-    : : : "rax");
+  ASM("movq %%cr3, %%rax;"
+      "movq %%rax, %%rax"
+      :
+      :
+      : "rax");
 }
 
 static addr_t
@@ -278,7 +279,7 @@ recurse_map(
   size_t i;
   addr_t pt_vaddr;
   status_t res;
-  
+
   ASSERT(level < PT_NUM_LEVELS);
 
   for (i = *index; i < PT_LENGTH && *pages > 0; ++i) {
@@ -385,8 +386,8 @@ vm_kmap_pages(
     *vaddr_hint = KERNEL_END_VADDR;
   else
     ASSERT(
-      *vaddr_hint > KERNEL_END_VADDR ||
-      (*vaddr_hint >= KERNEL_HEAP_START && *vaddr_hint < KERNEL_START_VADDR));
+        *vaddr_hint > KERNEL_END_VADDR ||
+        (*vaddr_hint >= KERNEL_HEAP_START && *vaddr_hint < KERNEL_START_VADDR));
   return vm_map_pages(pml4, paddr_start, pages, vaddr_hint, flags);
 }
 
@@ -402,16 +403,22 @@ vm_kmap_bytes(
     *vaddr_hint = KERNEL_END_VADDR;
   else
     ASSERT(
-      *vaddr_hint > KERNEL_END_VADDR ||
-      (*vaddr_hint >= KERNEL_HEAP_START && *vaddr_hint < KERNEL_START_VADDR));
+        *vaddr_hint > KERNEL_END_VADDR ||
+        (*vaddr_hint >= KERNEL_HEAP_START && *vaddr_hint < KERNEL_START_VADDR));
   return vm_map_bytes(pml4, paddr_start, bytes, vaddr_hint, flags);
 }
 
 static size_t
-recurse_unmap(struct pt* pt, size_t* index, size_t level, addr_t* vaddr, size_t pages) {
+recurse_unmap(
+    struct pt* pt,
+    size_t* index,
+    size_t level,
+    addr_t* vaddr,
+    size_t pages) {
   addr_t pt_vaddr;
   size_t unmapped_pages, pages_per_entry = get_pages_per_entry(level);
-  for (unmapped_pages = 0; *index < PT_LENGTH && unmapped_pages < pages; ++(*index)) {
+  for (unmapped_pages = 0; *index < PT_LENGTH && unmapped_pages < pages;
+       ++(*index)) {
     union pte* entry = &pt->entries[*index];
     if (level == PT_LAST_LEVEL) {
       entry->bytes = 0;
@@ -420,8 +427,12 @@ recurse_unmap(struct pt* pt, size_t* index, size_t level, addr_t* vaddr, size_t 
       *vaddr += PAGE_SIZE;
     } else if (entry->present) {
       pt_vaddr = map_page_tmp(PTEPADDR(entry), VM_MAP_WRITABLE);
-      unmapped_pages +=
-          recurse_unmap((struct pt*)pt_vaddr, index + 1, level + 1, vaddr, pages);
+      unmapped_pages += recurse_unmap(
+          (struct pt*)pt_vaddr,
+          index + 1,
+          level + 1,
+          vaddr,
+          pages);
       unmap_page_tmp(pt_vaddr);
     } else {
       unmapped_pages += pages_per_entry;
@@ -542,9 +553,10 @@ recurse_set_backing(struct pt* pt, size_t* index, size_t level, addr_t paddr) {
   return res;
 }
 
-status_t vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr) {
+status_t
+vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr) {
   size_t indices[4];
-  union vaddr vaddr_indices = { .address = vaddr };
+  union vaddr vaddr_indices = {.address = vaddr};
 
   ASSERT((vaddr & 0xfff) == 0);
   ASSERT((paddr & 0xfff) == 0);
@@ -557,6 +569,7 @@ status_t vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr) {
   return recurse_set_backing(table, indices, 0, paddr);
 }
 
-status_t vm_kset_backing(addr_t vaddr, addr_t paddr) {
+status_t
+vm_kset_backing(addr_t vaddr, addr_t paddr) {
   return vm_set_backing(pml4, vaddr, paddr);
 }

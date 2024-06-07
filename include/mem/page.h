@@ -9,9 +9,9 @@
 #define PAGES(b) ((b + PAGE_SIZE - 1) / PAGE_SIZE)
 #define BYTES(p) ((p) * PAGE_SIZE)
 
-#define PAGEALIGNUP(a) ALIGNUP(a, PAGE_SIZE)
+#define PAGEALIGNUP(a)   ALIGNUP(a, PAGE_SIZE)
 #define PAGEALIGNDOWN(a) ALIGNDOWN(a, PAGE_SIZE)
 
-#define ISPAGEALIGNED(a) (((a) & (PAGE_SIZE-1)) == 0)
+#define ISPAGEALIGNED(a) (((a) & (PAGE_SIZE - 1)) == 0)
 
 #endif

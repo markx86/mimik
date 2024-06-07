@@ -13,12 +13,12 @@ struct PACKED idtr {
 struct PACKED idt_entry {
   uint16_t offset_low;
   uint16_t segsel;
-  uint8_t ist : 2;
-  uint8_t reserved : 6;
+  uint8_t ist       : 2;
+  uint8_t reserved  : 6;
   uint8_t gate_type : 4;
-  uint8_t zero : 1;
-  uint8_t dpl : 2;
-  uint8_t present : 1;
+  uint8_t zero      : 1;
+  uint8_t dpl       : 2;
+  uint8_t present   : 1;
   uint16_t offset_mid;
   uint32_t offset_high;
   uint32_t padding;
@@ -31,8 +31,8 @@ enum gate_type {
 
 struct idt_entry idt[MAX_IDT_ENTRIES] = {0};
 struct idtr idtr = {
-    .size = sizeof(idt) - 1,
-    .offset = (uint64_t)idt,
+  .size = sizeof(idt) - 1,
+  .offset = (uint64_t)idt,
 };
 
 #define ISR(n) extern void isr##n(void)
@@ -84,7 +84,7 @@ set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
   entry->dpl = PL(0);
 }
 
-#define TRAP(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_TRAP)
+#define TRAP(n)      set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_TRAP)
 #define INTERRUPT(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_INTERRUPT)
 
 /* NOTE: make this a list, maybe? */

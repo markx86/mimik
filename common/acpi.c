@@ -26,10 +26,10 @@ static const char* known_tbls[] = {
   [ACPI_TABLE_MCFG] = "MCFG",
   [ACPI_TABLE_RSDT] = "RSDT",
   [ACPI_TABLE_SSDT] = "SSDT",
-  [ACPI_TABLE_XSDT] = "XSDT"
-};
+  [ACPI_TABLE_XSDT] = "XSDT"};
 
-static status_t map_table(addr_t paddr, struct acpi_sdt_header** out) {
+static status_t
+map_table(addr_t paddr, struct acpi_sdt_header** out) {
   status_t res;
   res = vm_kmap_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
   if (ISERROR(res))
@@ -62,7 +62,8 @@ signature_matches(char* sig) {
   return TRUE;
 }
 
-ptr_t acpi_get_known_table(enum acpi_table table) {
+ptr_t
+acpi_get_known_table(enum acpi_table table) {
   if (table >= ACPI_TABLE_MAX)
     return NULL;
   return acpi_get_table(known_tbls[table]);
@@ -88,7 +89,11 @@ acpi_get_table(const char* sig) {
   return NULL;
 }
 
-static status_t acpi_init_generic(struct acpi_rsdp* rsdp, addr_t sdt_address, uint8_t revision) {
+static status_t
+acpi_init_generic(
+    struct acpi_rsdp* rsdp,
+    addr_t sdt_address,
+    uint8_t revision) {
   status_t res;
   if (!checksum_matches(rsdp, sizeof(*rsdp)))
     return -EINVAL;

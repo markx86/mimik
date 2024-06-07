@@ -4,10 +4,8 @@
 #include <types.h>
 #include <util/compiler.h>
 
-void ATTRIBUTES(noreturn) _assert(
-  const char* file,
-  size_t line,
-  const char* msg);
+void ATTRIBUTES(noreturn)
+    _assert(const char* file, size_t line, const char* msg);
 
 #define ASSERT(x)                      \
   do {                                 \

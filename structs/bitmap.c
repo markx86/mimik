@@ -6,10 +6,10 @@ bitmap_from(size_t sz, ptr_t ptr) {
   size_t size = sz, bytes = (size + 7) >> 3;
   mem_set(ptr, 0, bytes);
   return (struct bitmap){
-      .bytes = bytes,
-      .size = size,
-      .unset = size,
-      .map = ptr,
+    .bytes = bytes,
+    .size = size,
+    .unset = size,
+    .map = ptr,
   };
 }
 

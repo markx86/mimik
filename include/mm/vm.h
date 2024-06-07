@@ -65,8 +65,8 @@ status_t vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr);
 status_t vm_kset_backing(addr_t vaddr, addr_t paddr);
 
 #define vm_reserve_pages(table, vaddr_hint, pages, flags) \
-  vm_map_pages(table, (addr_t)-BYTES(pages), pages, vaddr_hint, flags)
+  vm_map_pages(table, (addr_t) - BYTES(pages), pages, vaddr_hint, flags)
 #define vm_kreserve_pages(vaddr_hint, pages, flags) \
-  vm_kmap_pages((addr_t)-BYTES(pages), pages, vaddr_hint, flags)
+  vm_kmap_pages((addr_t) - BYTES(pages), pages, vaddr_hint, flags)
 
 #endif

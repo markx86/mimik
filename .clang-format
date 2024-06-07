@@ -7,15 +7,23 @@ PointerAlignment: Left
 ColumnLimit: 80
 AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlines: Left
+AlignConsecutiveBitFields: AcrossComments
+AlignConsecutiveMacros: Consecutive
 AllowShortEnumsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortFunctionsOnASingleLine: None
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowAllArgumentsOnNextLine: false
+AlwaysBreakAfterReturnType: AllDefinitions
 BinPackArguments: false
 BinPackParameters: false
+BitFieldColonSpacing: Both
+BracedInitializerIndentWidth: 2
+# BreakAfterReturnType: AllDefinitions
+BreakBeforeBraces: Attach
+BreakBeforeInlineASMColon: OnlyMultiline
+BreakBeforeTernaryOperators: true
 IndentCaseLabels: true
-SortIncludes: false
 LineEnding: LF
-AlwaysBreakAfterReturnType: AllDefinitions
+SortIncludes: false
