@@ -36,8 +36,8 @@ kernel_main(
   pm_init();
   vm_init();
   mm_init();
-  ASSERT(arch_init(bootinfo) == SUCCESS);
   isr_init();
+  ASSERT(arch_init(bootinfo) == SUCCESS);
   /* TODO: initialize PIC and mask all interrupts */
   int_enable();
   parse_bootinfo(bootinfo);

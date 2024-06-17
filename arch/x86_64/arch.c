@@ -1,6 +1,7 @@
 #include <arch.h>
 #include <cpu/gdt.h>
 #include <cpu/pic.h>
+#include <cpu/pit.h>
 #include <cpu/cpuid.h>
 #include <assert.h>
 
@@ -45,5 +46,6 @@ arch_init(struct bootinfo* bootinfo) {
   check_and_enable_features();
   acpi_init(&bootinfo->arch.acpi);
   pic_init(&bootinfo->arch);
+  pit_init();
   return SUCCESS;
 }
