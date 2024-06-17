@@ -60,8 +60,8 @@ boot_gdtr:
 .global load_boot_gdt
 load_boot_gdt:
   lgdtl (boot_gdtr)
-  jmp $BOOT_CS,$flush_instruction_cache
-flush_instruction_cache:
+  jmp $BOOT_CS,$reload_cs32
+reload_cs32:
   movw $BOOT_DS, %ax
   movw %ax, %ds
   movw %ax, %es
@@ -70,9 +70,10 @@ flush_instruction_cache:
   movw %ax, %ss
   ret
 
-#define UPDATEFLAGS(label)            \
-  movl (_gdt_##label##_flags), %eax;  \
-  orl $(FLAGS_LONGMODE << 4), %eax;   \
+#define UPDATEFLAGS(label)                 \
+  movl (_gdt_##label##_flags), %eax       ;\
+  andl $~(FLAGS_PROTECTEDMODE << 4), %eax ;\
+  orl $(FLAGS_LONGMODE << 4), %eax        ;\
   movl %eax, (_gdt_##label##_flags)
 
 /* updates the gdt and switches to long mode */

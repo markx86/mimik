@@ -26,7 +26,6 @@ gdt:
     ACCESS_EXECUTABLE +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE + 
 		FLAGS_LONGMODE)
   /*
    * define kernel data segment with the following properties
@@ -43,7 +42,6 @@ gdt:
     ACCESS_NORMALSEGMENT +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE +
 		FLAGS_LONGMODE)
   /*
    * define kernel user segment with the following properties
@@ -61,7 +59,6 @@ gdt:
     ACCESS_EXECUTABLE +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE +
 		FLAGS_LONGMODE)
   /*
    * define user data segment with the following properties
@@ -78,7 +75,6 @@ gdt:
     ACCESS_NORMALSEGMENT +
     ACCESS_READWRITE,
     FLAGS_GRANULARITY +
-    FLAGS_PROTECTEDMODE +
 		FLAGS_LONGMODE)
 gdt_end:
 
@@ -98,5 +94,15 @@ gdt_load:
    */
   popq %rax
   pushq $KERNEL_CS
-  pushq %rax
+  leaq (reload_cs), %rdi
+  pushq %rdi
   lretq
+reload_cs:
+  pushq %rax
+  movw $KERNEL_DS, %ax
+  movw %ax, %ds
+  movw %ax, %es
+  movw %ax, %fs
+  movw %ax, %gs
+  movw %ax, %ss
+  ret

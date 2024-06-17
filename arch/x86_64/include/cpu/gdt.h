@@ -6,16 +6,16 @@
 #define GDTENTRY(label, base, limit, access, flags) \
   .global _gdt_##label;                             \
   _gdt_##label :;                                   \
-  .short(limit) & 0xffff;                           \
-  .short(base) & 0xffff;                            \
-  .byte((base) >> 16) & 0xff;                       \
+  .short(limit & 0xffff);                           \
+  .short(base & 0xffff);                            \
+  .byte(((base) >> 16) & 0xff);                     \
   .byte(access);                                    \
   _gdt_##label##_flags :;                           \
-  .byte((flags) << 4) | (((limit) >> 16) & 0xf);    \
-  .byte((base) >> 24) & 0xff
+  .byte(((flags) << 4) | (((limit) >> 16) & 0xf));  \
+  .byte(((base) >> 24) & 0xff)
 #define GDTSYSENTRY(label, base, limit, access, flags) \
   GDTENTRY(label, base, limit, access, flags);         \
-  .long(base) >> 32;                                   \
+  .long((base) >> 32);                                 \
   .long 0
 
 #define ACCESS_PRESENT           (1 << 7)
