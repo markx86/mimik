@@ -1,6 +1,7 @@
 #include <cpu/isr.h>
 #include <cpu/gdt.h>
 #include <util/compiler.h>
+#include <util/struct.h>
 #include <assert.h>
 
 #define MAX_IDT_ENTRIES 256
@@ -130,7 +131,9 @@ isr_init(void) {
 }
 
 void
-isr_register(enum exception exc, isr_t handler) {
-  ASSERT(exc < EXCEPTION_MAX);
-  isrs[exc] = handler;
+isr_register(int irq, isr_t handler, isr_t* old_handler) {
+  ASSERT(irq >= 0 && irq < ARRAYLEN(isrs));
+  if (old_handler != NULL)
+    *old_handler = isrs[irq];
+  isrs[irq] = handler;
 }

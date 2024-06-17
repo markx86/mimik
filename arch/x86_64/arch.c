@@ -45,6 +45,5 @@ arch_init(struct bootinfo* bootinfo) {
   check_and_enable_features();
   acpi_init(&bootinfo->arch.acpi);
   pic_init(&bootinfo->arch);
-  pic_mask(0x10);
   return SUCCESS;
 }

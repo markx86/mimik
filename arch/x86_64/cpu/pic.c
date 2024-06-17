@@ -111,6 +111,9 @@ old_pic_ack(uint8_t irq) {
 static status_t
 old_pic_init(void) {
   old_pic_remap(0x10, 0x18);
+  /* mask all interrupts */
+  io_outb(PIC1_DATA, PIC_DISABLE);
+  io_outb(PIC2_DATA, PIC_DISABLE);
   actions.ack = &old_pic_ack;
   actions.mask = &old_pic_mask;
   actions.unmask = &old_pic_unmask;

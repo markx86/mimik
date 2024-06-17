@@ -1,6 +1,7 @@
 .section .rodata, "a", @progbits
+
 error_msg:
-  .asciz "Unhandled interrupt %d"
+  .asciz "[!] Unhandled interrupt %d\n"
 
 .section .text, "ax"
 .code64
@@ -31,7 +32,7 @@ error_msg:
   pushq %r10       ;\
   pushq %r11       ;\
   pushq %r12       ;\
-  pushq  %r13      ;\
+  pushq %r13       ;\
   pushq %r14       ;\
   pushq %r15
 
@@ -57,23 +58,23 @@ isr_stub:
   /* store pointer to isr_frame struct into %rdi */
   movq %rsp, %rdi
   /* store the exception number into %rsi */
-  movq 128(%rsp), %rsi
+  movq 120(%rsp), %rsi
   /* get the address of the isr registered with this interrupt */
-  movq %rsi, %rax
-  shlq $3, %rax
-  addq $isrs, %rax
+  leaq (isrs), %rax
+  leaq (%rax,%rsi,8), %rax
   movq (%rax), %rax
   /* check if the isr is not NULL */
   cmpq %rax, 0
   jne 0f
   /* if it is NULL, print an error message and jump to _fail */
-  movq $error_msg, %rdi
+  leaq (error_msg), %rdi
   call printk
   movq $(_fail+HIGHER_HALF), %rax
   jmp *%rax
 0:
   call *%rax
   POPREGS()
+  addq $16, %rsp
   iretq
 
 /* Exceptions */
