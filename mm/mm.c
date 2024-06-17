@@ -56,7 +56,7 @@ mm_init(void) {
 }
 
 static inline size_t
-round_to_power_of_2(size_t sz) {
+ceil_to_power_of_2(size_t sz) {
   --sz;
   sz |= sz >> 1;
   sz |= sz >> 2;
@@ -85,7 +85,7 @@ slab_size(enum slab_type type) {
 static inline struct slab*
 get_slab_from_size(size_t sz) {
   enum slab_type type;
-  size_t chunk_sz = round_to_power_of_2(sz);
+  size_t chunk_sz = ceil_to_power_of_2(sz);
   chunk_sz >>= 4;
   for (type = 0; chunk_sz > 0; ++type)
     chunk_sz >>= 1;
@@ -127,7 +127,7 @@ mm_alloc(size_t sz) {
   struct list* chunk;
   ASSERT(sz < slab_size(SLAB_MAX - 1));
   slab = get_slab_from_size(sz);
-  if (list_length(&slab->freelist) == 0)
+  if (list_is_empty(&slab->freelist))
     alloc_slab(slab);
   chunk = slab->freelist.next;
   list_remove(chunk);
@@ -171,6 +171,27 @@ mm_map(addr_t hint, size_t size, enum vm_map_flags flags) {
   for (vaddr = hint; pages > 0; --pages) {
     paddr = pm_request_page();
     res = vm_kset_backing(vaddr, paddr);
+    ASSERT(res == SUCCESS);
+    vaddr += PAGE_SIZE;
+  }
+
+  return (ptr_t)hint;
+}
+
+ptr_t
+mm_map_in_table(ptr_t table, addr_t hint, size_t size, enum vm_map_flags flags) {
+  size_t pages;
+  status_t res;
+  addr_t paddr, vaddr;
+
+  pages = PAGES(size);
+  res = vm_reserve_pages(table, &hint, pages, flags);
+  if (ISERROR(res))
+    return NULL;
+
+  for (vaddr = hint; pages > 0; --pages) {
+    paddr = pm_request_page();
+    res = vm_set_backing(table, vaddr, paddr);
     ASSERT(res == SUCCESS);
     vaddr += PAGE_SIZE;
   }
