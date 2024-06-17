@@ -2,7 +2,7 @@
 #include <log/log.h>
 
 void
-_assert(const char* file, size_t line, const char* expr) {
+_assert_fail(const char* file, size_t line, const char* expr) {
   const char *cur, *root, *this_file = __FILE__;
 
   /* NOTE: this assumes that assert.c is in the project root directory */

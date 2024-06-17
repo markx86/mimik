@@ -179,7 +179,11 @@ mm_map(addr_t hint, size_t size, enum vm_map_flags flags) {
 }
 
 ptr_t
-mm_map_in_table(ptr_t table, addr_t hint, size_t size, enum vm_map_flags flags) {
+mm_map_in_table(
+    ptr_t table,
+    addr_t hint,
+    size_t size,
+    enum vm_map_flags flags) {
   size_t pages;
   status_t res;
   addr_t paddr, vaddr;
