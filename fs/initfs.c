@@ -53,7 +53,7 @@ initfs_from_module(struct bootinfo_module* mod) {
   fs.phys_end = mod->end_address;
   fs.virt_start = 0;
   pm_try_lock_range(fs.phys_start, fs.phys_end);
-  vm_kmap_range(fs.phys_start, fs.phys_end, &fs.virt_start, 0);
+  vmk_map_range(fs.phys_start, fs.phys_end, &fs.virt_start, 0);
   fs.virt_end = fs.virt_start + (fs.phys_end - fs.phys_start);
   return fs;
 }
@@ -61,7 +61,7 @@ initfs_from_module(struct bootinfo_module* mod) {
 void
 initfs_release(struct initfs* fs) {
   ASSERT(fs->virt_start != 0);
-  vm_kunmap_range(fs->virt_start, fs->virt_end);
+  vmk_unmap_range(fs->virt_start, fs->virt_end);
   pm_try_release_range(fs->phys_start, fs->phys_end);
   mem_set(fs, 0, sizeof(*fs));
 }

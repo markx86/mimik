@@ -12,6 +12,8 @@
 #define PAGEALIGNUP(a)   ALIGNUP(a, PAGE_SIZE)
 #define PAGEALIGNDOWN(a) ALIGNDOWN(a, PAGE_SIZE)
 
-#define ISPAGEALIGNED(a) (((a) & (PAGE_SIZE - 1)) == 0)
+#define PAGEOFFSET(a) ((a) & (PAGE_SIZE - 1))
+
+#define ISPAGEALIGNED(a) (PAGEOFFSET(a) == 0)
 
 #endif

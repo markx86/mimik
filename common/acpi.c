@@ -31,12 +31,12 @@ static const char* known_tbls[] = {
 static status_t
 map_table(addr_t paddr, struct acpi_sdt_header** out) {
   status_t res;
-  res = vm_kmap_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
+  res = vmk_map_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
   if (ISERROR(res))
     return res;
-  // FIXME: this could page-fault if (*out)->length is in the next page
+  /* FIXME: this could page-fault if (*out)->length is in the next page */
   if ((*out)->length > PAGE_SIZE - ((addr_t)*out & 0xfff)) {
-    res = vm_kmap_bytes(paddr, (*out)->length, (addr_t*)out, 0);
+    res = vmk_map_bytes(paddr, (*out)->length, (addr_t*)out, 0);
     if (ISERROR(res))
       return res;
   }

@@ -164,13 +164,13 @@ mm_map(addr_t hint, size_t size, enum vm_map_flags flags) {
   addr_t paddr, vaddr;
 
   pages = PAGES(size);
-  res = vm_kreserve_pages(&hint, pages, flags);
+  res = vmk_reserve_pages(&hint, pages, flags);
   if (ISERROR(res))
     return NULL;
 
   for (vaddr = hint; pages > 0; --pages) {
     paddr = pm_request_page();
-    res = vm_kset_backing(vaddr, paddr);
+    res = vmk_set_backing(vaddr, paddr);
     ASSERT(res == SUCCESS);
     vaddr += PAGE_SIZE;
   }
