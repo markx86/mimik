@@ -28,6 +28,26 @@ parse_bootinfo(struct bootinfo* bootinfo) {
   }
 }
 
+void remap_kernel(void) {
+  status_t res;
+
+  /* remap kernel entry (if present) as RW- */
+  res = vm_kflag_range(KERNEL_VADDR_START, KERNEL_TEXT_START, VM_FLAG_READ | VM_FLAG_WRITABLE);
+  ASSERT(res == SUCCESS);
+
+  /* remap kernel text as R-X */
+  res = vm_kflag_range(KERNEL_TEXT_START, KERNEL_TEXT_END, VM_FLAG_READ | VM_FLAG_EXECUTABLE);
+  ASSERT(res == SUCCESS);
+
+  /* remap kernel rodata as R-- */
+  res = vm_kflag_range(KERNEL_RODATA_START, KERNEL_RODATA_END, VM_FLAG_READ);
+  ASSERT(res == SUCCESS);
+
+  /* remap kernel bss and data as RW- */
+  res = vm_kflag_range(KERNEL_DATA_START, KERNEL_DATA_END, VM_FLAG_READ | VM_FLAG_WRITABLE);
+  ASSERT(res == SUCCESS);
+}
+
 void
 kernel_main(
     struct bootinfo* bootinfo,
@@ -36,6 +56,7 @@ kernel_main(
   pm_init();
   vm_init();
   mm_init();
+  remap_kernel();
   isr_init();
   ASSERT(arch_init(bootinfo) == SUCCESS);
   /* TODO: initialize PIC and mask all interrupts */

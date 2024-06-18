@@ -1,7 +1,7 @@
 .section .entry.bss, "aw", @nobits
 
 #define SIZE_4KB 0x1000
-#define DEFINEPT(name) \
+#define DEFINEPT(name)  \
   .align SIZE_4KB      ;\
   name:                ;\
     .skip SIZE_4KB
@@ -11,13 +11,12 @@ DEFINEPT(pdp)
 DEFINEPT(pd)
 DEFINEPT(pt)
 
-.section .entry.data, "aw", @progbits
+.section .entry.text, "ax"
+.code32
+
 /* shut the compiler up */
 kernel_vaddr_start:
   .quad _kernel_vaddr_start
-
-.section .entry.text, "ax"
-.code32
 
 #define ENTRY_FLAG_PRESENT (1 << 0)
 #define ENTRY_FLAG_WRITABLE (1 << 1)

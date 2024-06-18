@@ -24,20 +24,26 @@ SECTIONS {
 
 	. += HIGHER_HALF;
 	
-	.text : AT(ADDR(.text) - HIGHER_HALF) {
+	.text ALIGN(4K) : AT(ADDR(.text) - HIGHER_HALF) {
+		_kernel_text_start = .;
 		*(.text)
+		_kernel_text_end = .;
 	}
 
 	.rodata ALIGN(4K) : AT(ADDR(.rodata) - HIGHER_HALF) {
+		_kernel_rodata_start = .;
 		*(.rodata)
+		_kernel_rodata_end = .;
 	}
 
-	.data : AT(ADDR(.data) - HIGHER_HALF) {
+	.data ALIGN(4K) : AT(ADDR(.data) - HIGHER_HALF) {
+		_kernel_data_start = .;
 		*(.data)
 	}
 
 	.bss : AT(ADDR(.bss) - HIGHER_HALF) {
 		*(.bss)
+		_kernel_data_end = .;
 	}
 
 	_kernel_paddr_end = . - HIGHER_HALF;

@@ -109,7 +109,7 @@ alloc_slab(struct slab* s) {
   p = (addr_t)mm_map(
       PAGEALIGNUP(s->end),
       SLAB_GROW_SIZE,
-      VM_MAP_WRITABLE | VM_MAP_STRICT);
+      VM_FLAG_WRITABLE | VM_FLAG_STRICT);
   ASSERT(p != 0);
 
   chunk_size = slab_size(s->type);

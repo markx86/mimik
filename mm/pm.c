@@ -65,7 +65,7 @@ void
 pm_init(void) {
   init_first_bitmap();
   compute_mem_size(&kcfg.bootinfo->mem_map);
-  pm_try_lock_range(KERNEL_START_PADDR, KERNEL_END_PADDR);
+  pm_try_lock_range(KERNEL_PADDR_START, KERNEL_PADDR_END);
   next_bitmap_page = pm_request_page();
   LOGSUCCESS("physical memory manager initialized");
 }

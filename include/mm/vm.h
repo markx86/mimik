@@ -5,10 +5,11 @@
 #include <mem/page.h>
 
 enum vm_map_flags {
-  VM_MAP_STRICT = 1 << 0,
-  VM_MAP_USER = 1 << 1,
-  VM_MAP_WRITABLE = 1 << 2,
-  VM_MAP_EXECUTABLE = 1 << 3,
+  VM_FLAG_READ = 0,
+  VM_FLAG_STRICT = 1 << 0,
+  VM_FLAG_USER = 1 << 1,
+  VM_FLAG_WRITABLE = 1 << 2,
+  VM_FLAG_EXECUTABLE = 1 << 3,
 };
 
 void vm_init(void);
@@ -68,5 +69,14 @@ status_t vm_kset_backing(addr_t vaddr, addr_t paddr);
   vm_map_pages(table, (addr_t) - BYTES(pages), pages, vaddr_hint, flags)
 #define vm_kreserve_pages(vaddr_hint, pages, flags) \
   vm_kmap_pages((addr_t) - BYTES(pages), pages, vaddr_hint, flags)
+
+  
+status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, enum vm_map_flags flags);
+#define vm_flag_range(table, vaddr_start, vaddr_end, flags) \
+  vm_flag_pages(table, vaddr_start, PAGES(vaddr_end - vaddr_start), flags)
+
+status_t vm_kflag_pages(addr_t vaddr_start, size_t pages, enum vm_map_flags flags);
+#define vm_kflag_range(vaddr_start, vaddr_end, flags) \
+  vm_kflag_pages(vaddr_start, PAGES(vaddr_end - vaddr_start), flags)
 
 #endif
