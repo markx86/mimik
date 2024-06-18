@@ -74,7 +74,7 @@ addr_t
 pm_request_page(void) {
   addr_t paddr;
   if (PAGE_SIZE > mem_info.free)
-    ASSERT(0 && "Unimplemented"); /* TODO: swapping */
+    TODO("swapping");
   paddr = TOPADDR(first_free_bitmap->index, first_free_bitmap->first_free++);
   ASSERT(pm_try_lock_page(paddr));
   return paddr;
@@ -87,7 +87,7 @@ pm_request_pages(size_t num) {
   status_t res;
   size_t start_index, index, found = 0;
   if (BYTES(num) > mem_info.free)
-    ASSERT(0 && "Unimplemented"); /* TODO: swapping */
+    TODO("swapping");
   mem_bitmap = first_free_bitmap;
   for (index = mem_bitmap->first_free, start_index = index;
        found < num && index < mem_bitmap->super.size;

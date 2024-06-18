@@ -15,4 +15,6 @@ void ATTRIBUTES(noreturn)
 
 #define STATICASSERT(x, m) _Static_assert(x, m)
 
+#define TODO(msg) ASSERT(0 && "unimplemented: " msg)
+
 #endif

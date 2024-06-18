@@ -53,6 +53,8 @@ error_msg:
   popq %rax       ;\
   popq %rbp
 
+.extern pic_ack
+
 isr_stub:
   PUSHREGS()
   /* store pointer to isr_frame struct into %rdi */
@@ -73,6 +75,10 @@ isr_stub:
   jmp *%rax
 0:
   call *%rax
+  cmpq $16, %rsi
+  jb 1f
+  call pic_ack
+1:
   POPREGS()
   addq $16, %rsp
   iretq

@@ -27,13 +27,7 @@
 #define PIC_ICW4_BUFMASTER 0x0c
 #define PIC_ICW4_SFNM      0x10
 
-struct pic_actions {
-  void (*ack)(uint8_t);
-  void (*mask)(uint8_t);
-  void (*unmask)(uint8_t);
-};
-
-static struct pic_actions actions;
+static bool_t use_new_pic;
 
 bool_t
 has_apic(struct bootinfo_arch* bootinfo) {
@@ -48,7 +42,7 @@ new_pic_init(struct bootinfo_arch* bootinfo) {
   io_outb(PIC1_DATA, PIC_DISABLE);
   io_outb(PIC2_DATA, PIC_DISABLE);
   /* TODO: init APIC */
-  ASSERT(0 && "not implemented");
+  TODO("apic initialization");
   return SUCCESS;
 }
 
@@ -85,7 +79,7 @@ old_pic_remap(uint8_t off1, uint8_t off2) {
   io_outb(PIC2_DATA, pic2_mask);
 }
 
-static inline void
+static void
 old_pic_mask(uint8_t irq) {
   uint8_t value, port = irq < 8 ? PIC1_DATA : PIC2_DATA;
   irq &= 7;
@@ -93,7 +87,7 @@ old_pic_mask(uint8_t irq) {
   io_outb(port, value);
 }
 
-static inline void
+static void
 old_pic_unmask(uint8_t irq) {
   uint8_t value, port = irq < 8 ? PIC1_DATA : PIC2_DATA;
   irq &= 7;
@@ -114,31 +108,35 @@ old_pic_init(void) {
   /* mask all interrupts */
   io_outb(PIC1_DATA, PIC_DISABLE);
   io_outb(PIC2_DATA, PIC_DISABLE);
-  actions.ack = &old_pic_ack;
-  actions.mask = &old_pic_mask;
-  actions.unmask = &old_pic_unmask;
   return SUCCESS;
 }
 
 void
 pic_ack(uint8_t irq) {
-  if (actions.ack)
-    actions.ack(irq);
+  if (use_new_pic)
+    TODO();
+  else
+    old_pic_ack(irq);
 }
 
 void
 pic_mask(uint8_t irq) {
-  ASSERT(actions.mask);
-  actions.mask(irq);
+  if (use_new_pic)
+    TODO();
+  else
+    old_pic_mask(irq);
 }
 
 void
 pic_unmask(uint8_t irq) {
-  ASSERT(actions.unmask);
-  actions.unmask(irq);
+  if (use_new_pic)
+    TODO();
+  else
+    old_pic_unmask(irq);
 }
 
 status_t
 pic_init(struct bootinfo_arch* bootinfo) {
-  return has_apic(bootinfo) ? new_pic_init(bootinfo) : old_pic_init();
+  use_new_pic = has_apic(bootinfo);
+  return use_new_pic ? new_pic_init(bootinfo) : old_pic_init();
 }
