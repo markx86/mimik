@@ -10,7 +10,7 @@
 struct kernel_config kcfg;
 
 static void
-parse_bootinfo(struct bootinfo* bootinfo) {
+kernel_parse_bootinfo(struct bootinfo* bootinfo) {
   char* s;
   struct bootinfo_module* module;
 
@@ -28,7 +28,8 @@ parse_bootinfo(struct bootinfo* bootinfo) {
   }
 }
 
-void remap_kernel(void) {
+static void
+kernel_remap(void) {
   status_t res;
 
   /* remap kernel entry (if present) as RW- */
@@ -56,10 +57,10 @@ kernel_main(
   pm_init();
   vm_init();
   mm_init();
-  remap_kernel();
+  kernel_remap();
   isr_init();
   ASSERT(arch_init(bootinfo) == SUCCESS);
   int_enable();
-  parse_bootinfo(bootinfo);
+  kernel_parse_bootinfo(bootinfo);
   ASSERT(0 && "Hello from MIMIK!");
 }
