@@ -72,7 +72,7 @@ invalidate_page(addr_t vaddr) {
 }
 
 static inline void
-set_pte(union pte* entry, addr_t addr, enum vm_map_flags flags) {
+set_pte(union pte* entry, addr_t addr, int flags) {
   entry->bytes = addr & 0x000ffffffffff000;
   entry->present = 1;
   entry->writable = ISFLAGSET(flags, WRITABLE);
@@ -81,7 +81,7 @@ set_pte(union pte* entry, addr_t addr, enum vm_map_flags flags) {
 }
 
 static addr_t
-map_page_tmp(addr_t paddr, enum vm_map_flags flags) {
+map_page_tmp(addr_t paddr, int flags) {
   union vaddr vaddr = {.address = PT_TMP_START_VADDR};
   ASSERT(first_free_tmp_index < PT_LENGTH);
   vaddr.pt_index = first_free_tmp_index & 0x1ff;
@@ -166,7 +166,7 @@ create_pt(struct pt* pt, size_t index) {
 
 /* NOTE: only call this function on PTEs belonging to non leaf PTs */
 static void
-update_pt_pte_flags(struct pt* pt, size_t index, enum vm_map_flags flags) {
+update_pt_pte_flags(struct pt* pt, size_t index, int flags) {
   union pte* entry;
   ASSERT(index < PT_LENGTH);
   ASSERT(pt != NULL);
@@ -186,7 +186,7 @@ get_pages_per_entry(size_t level) {
 }
 
 static inline bool_t
-pte_flags_match(union pte* e, enum vm_map_flags flags) {
+pte_flags_match(union pte* e, int flags) {
   bool_t res = TRUE;
   res = res && (e->writable && ISFLAGSET(flags, WRITABLE));
   res = res && (e->user_accessible && ISFLAGSET(flags, USER));
@@ -201,7 +201,7 @@ find_space(
     size_t level,
     addr_t paddr_start,
     size_t pages,
-    enum vm_map_flags flags) {
+    int flags) {
   status_t res;
   bool_t strict;
   addr_t pt_vaddr, paddr;
@@ -277,7 +277,7 @@ recurse_map(
     size_t level,
     addr_t* paddr,
     size_t* pages,
-    enum vm_map_flags flags) {
+    int flags) {
   size_t i;
   addr_t pt_vaddr;
   status_t res;
@@ -321,7 +321,7 @@ vm_map_pages(
     addr_t paddr_start,
     size_t pages,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags) {
+    int flags) {
   status_t res;
   size_t indices[4];
   union vaddr vaddr_indices;
@@ -368,7 +368,7 @@ vm_map_bytes(
     addr_t paddr_start,
     size_t bytes,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags) {
+    int flags) {
   status_t res;
   addr_t aligned_paddr = PAGEALIGNDOWN(paddr_start);
   bytes = (paddr_start + bytes) - aligned_paddr;
@@ -383,7 +383,7 @@ vmk_map_pages(
     addr_t paddr_start,
     size_t pages,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags) {
+    int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
@@ -398,7 +398,7 @@ vmk_map_bytes(
     addr_t paddr_start,
     size_t bytes,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags) {
+    int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
@@ -581,7 +581,7 @@ vmk_set_backing(addr_t vaddr, addr_t paddr) {
 }
 
 static status_t
-recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, enum vm_map_flags flags) {
+recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, int flags) {
   size_t i;
   addr_t pt_vaddr;
   status_t res;
@@ -619,7 +619,7 @@ recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, enum vm_
   return SUCCESS;
 }
 
-status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, enum vm_map_flags flags) {
+status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags) {
   size_t indices[4];
   union vaddr vaddr_indices = {.address = vaddr_start};
 
@@ -634,7 +634,7 @@ status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, enum vm_ma
   return recurse_flag(table, indices, 0, &pages, flags);
 }
 
-status_t vmk_flag_pages(addr_t vaddr_start, size_t pages, enum vm_map_flags flags) {
+status_t vmk_flag_pages(addr_t vaddr_start, size_t pages, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(ISKVADDR(vaddr_start));
   return vm_flag_pages(kpml4, vaddr_start, pages, flags);

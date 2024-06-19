@@ -4,13 +4,11 @@
 #include <boot/bootinfo.h>
 #include <mem/page.h>
 
-enum vm_map_flags {
-  VM_FLAG_READ = 0,
-  VM_FLAG_STRICT = 1 << 0,
-  VM_FLAG_USER = 1 << 1,
-  VM_FLAG_WRITABLE = 1 << 2,
-  VM_FLAG_EXECUTABLE = 1 << 3,
-};
+#define VM_FLAG_READ       0
+#define VM_FLAG_STRICT     (1 << 0)
+#define VM_FLAG_USER       (1 << 1)
+#define VM_FLAG_WRITABLE   (1 << 2)
+#define VM_FLAG_EXECUTABLE (1 << 3)
 
 void vm_init(void);
 void vm_flush_tlb(void);
@@ -20,13 +18,13 @@ status_t vm_map_pages(
     addr_t paddr_start,
     size_t pages,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags);
+    int flags);
 status_t vm_map_bytes(
     ptr_t table,
     addr_t paddr_start,
     size_t bytes,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags);
+    int flags);
 #define vm_map_page(table, paddr, vaddr_hint, flags) \
   vm_map_pages(table, paddr, 1, vaddr_hint, flags)
 #define vm_map_range(table, paddr_start, paddr_end, vaddr_hint, flags) \
@@ -36,12 +34,12 @@ status_t vmk_map_pages(
     addr_t paddr_start,
     size_t pages,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags);
+    int flags);
 status_t vmk_map_bytes(
     addr_t paddr_start,
     size_t bytes,
     addr_t* vaddr_hint,
-    enum vm_map_flags flags);
+    int flags);
 #define vmk_map_page(paddr, vaddr_hint, flags) \
   vmk_map_pages(paddr, 1, vaddr_hint, flags)
 #define vmk_map_range(paddr_start, paddr_end, vaddr_hint, flags) \
@@ -71,11 +69,11 @@ status_t vmk_set_backing(addr_t vaddr, addr_t paddr);
   vmk_map_pages((addr_t) - BYTES(pages), pages, vaddr_hint, flags)
 
   
-status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, enum vm_map_flags flags);
+status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags);
 #define vm_flag_range(table, vaddr_start, vaddr_end, flags) \
   vm_flag_pages(table, vaddr_start, PAGES(vaddr_end - vaddr_start), flags)
 
-status_t vmk_flag_pages(addr_t vaddr_start, size_t pages, enum vm_map_flags flags);
+status_t vmk_flag_pages(addr_t vaddr_start, size_t pages, int flags);
 #define vmk_flag_range(vaddr_start, vaddr_end, flags) \
   vmk_flag_pages(vaddr_start, PAGES(vaddr_end - vaddr_start), flags)
 

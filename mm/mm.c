@@ -158,7 +158,7 @@ mm_free(ptr_t* alloc) {
 }
 
 ptr_t
-mm_map(addr_t hint, size_t size, enum vm_map_flags flags) {
+mm_map(addr_t hint, size_t size, int flags) {
   size_t pages;
   status_t res;
   addr_t paddr, vaddr;
@@ -183,7 +183,7 @@ mm_map_in_table(
     ptr_t table,
     addr_t hint,
     size_t size,
-    enum vm_map_flags flags) {
+    int flags) {
   size_t pages;
   status_t res;
   addr_t paddr, vaddr;
