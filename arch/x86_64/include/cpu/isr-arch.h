@@ -5,6 +5,8 @@
 #error "Do not include isr-arch.h directly. Include isr.h instead."
 #endif
 
+#include <types.h>
+
 enum exception {
   EXCEPTION_DE = 0,
   EXCEPTION_DB,
@@ -41,8 +43,26 @@ enum exception {
   EXCEPTION_MAX
 };
 
+typedef uint64_t reg_t;
+
 struct isr_frame {
-  /* TODO: fill this struct lol */
+  reg_t r15;
+  reg_t r14;
+  reg_t r13;
+  reg_t r12;
+  reg_t r11;
+  reg_t r10;
+  reg_t r9;
+  reg_t r8;
+  reg_t rsi;
+  reg_t rdi;
+  reg_t rdx;
+  reg_t rcx;
+  reg_t rbx;
+  reg_t rax;
+  reg_t rbp;
+  uint64_t isr_n;
+  uint64_t error;
 };
 
 #endif

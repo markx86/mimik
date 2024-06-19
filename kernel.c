@@ -59,7 +59,6 @@ kernel_main(
   remap_kernel();
   isr_init();
   ASSERT(arch_init(bootinfo) == SUCCESS);
-  /* TODO: initialize PIC and mask all interrupts */
   int_enable();
   parse_bootinfo(bootinfo);
   ASSERT(0 && "Hello from MIMIK!");
