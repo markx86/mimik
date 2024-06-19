@@ -1,7 +1,9 @@
 #include <cpu/isr.h>
+#include <cpu/pic.h>
 #include <cpu/gdt.h>
 #include <util/compiler.h>
 #include <util/struct.h>
+#include <mem/mem.h>
 #include <assert.h>
 
 #define MAX_IDT_ENTRIES 256
@@ -71,6 +73,22 @@ ISR(28);
 ISR(29);
 ISR(30);
 ISR(31);
+ISR(32);
+ISR(33);
+ISR(34);
+ISR(35);
+ISR(36);
+ISR(37);
+ISR(38);
+ISR(39);
+ISR(40);
+ISR(41);
+ISR(42);
+ISR(43);
+ISR(44);
+ISR(45);
+ISR(46);
+ISR(47);
 
 static inline void
 set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
@@ -88,11 +106,12 @@ set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
 #define TRAP(n)      set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_TRAP)
 #define INTERRUPT(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_INTERRUPT)
 
-/* NOTE: make this a list, maybe? */
-isr_t isrs[EXCEPTION_MAX] = {0};
+isr_t isrs[MAX_IDT_ENTRIES];
 
 void
 isr_init(void) {
+  mem_set(isrs, 0, sizeof(isrs));
+
   /* register all exceptions */
   TRAP(0);
   TRAP(1);
@@ -127,13 +146,41 @@ isr_init(void) {
   TRAP(30);
   TRAP(31);
 
+  /* register all other interrupts */
+  INTERRUPT(32);
+  INTERRUPT(33);
+  INTERRUPT(34);
+  INTERRUPT(35);
+  INTERRUPT(36);
+  INTERRUPT(37);
+  INTERRUPT(38);
+  INTERRUPT(39);
+  INTERRUPT(40);
+  INTERRUPT(41);
+  INTERRUPT(42);
+  INTERRUPT(43);
+  INTERRUPT(44);
+  INTERRUPT(45);
+  INTERRUPT(46);
+  INTERRUPT(47);
+
   ASM("lidt %0" : : "m"(idtr));
 }
 
 void
-isr_register(int irq, isr_t handler, isr_t* old_handler) {
+isr_register(size_t irq, isr_t handler, isr_t* old_handler) {
   ASSERT(irq >= 0 && irq < ARRAYLEN(isrs));
   if (old_handler != NULL)
     *old_handler = isrs[irq];
   isrs[irq] = handler;
+}
+
+void isr_common(struct isr_frame* frame) {
+  isr_t isr;
+  size_t n = frame->isr_n;
+  ASSERT(n <= UINT8_MAX);
+  isr = isrs[n];
+  ASSERT(isr && "unhandled interrupt");
+  isr(frame);
+  pic_ack((uint8_t)n);
 }

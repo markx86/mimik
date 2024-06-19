@@ -53,37 +53,16 @@ error_msg:
   popq %rax       ;\
   popq %rbp
 
-.extern pic_ack
-
 isr_stub:
   PUSHREGS()
   /* store pointer to isr_frame struct into %rdi */
   movq %rsp, %rdi
-  /* store the exception number into %rsi */
-  movq 120(%rsp), %rsi
-  /* get the address of the isr registered with this interrupt */
-  leaq (isrs), %rax
-  leaq (%rax,%rsi,8), %rax
-  movq (%rax), %rax
-  /* check if the isr is not NULL */
-  cmpq %rax, 0
-  jne 0f
-  /* if it is NULL, print an error message and jump to _fail */
-  leaq (error_msg), %rdi
-  call printk
-  movq $(_fail+HIGHER_HALF), %rax
-  jmp *%rax
-0:
-  call *%rax
-  cmpq $16, %rsi
-  jb 1f
-  call pic_ack
-1:
+  call isr_common
   POPREGS()
   addq $16, %rsp
   iretq
 
-/* Exceptions */
+/* exceptions */
 ISRNOERR(0)   /* #DE */
 ISRNOERR(1)   /* #DB */
 ISRNOERR(2)   /* --- */
@@ -116,3 +95,21 @@ ISRNOERR(28)  /* #HV */
 ISRERR(29)    /* #VC */
 ISRERR(30)    /* #SX */
 ISRNOERR(31)  /* --- */
+
+/* pic interrupts */
+ISRNOERR(32)  /* PIT */
+ISRNOERR(33)  /* --- */
+ISRNOERR(34)  /* --- */
+ISRNOERR(35)  /* --- */
+ISRNOERR(36)  /* --- */
+ISRNOERR(37)  /* --- */
+ISRNOERR(38)  /* --- */
+ISRNOERR(39)  /* --- */
+ISRNOERR(40)  /* --- */
+ISRNOERR(41)  /* --- */
+ISRNOERR(42)  /* --- */
+ISRNOERR(43)  /* --- */
+ISRNOERR(44)  /* --- */
+ISRNOERR(45)  /* --- */
+ISRNOERR(46)  /* --- */
+ISRNOERR(47)  /* --- */
