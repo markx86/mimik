@@ -27,16 +27,18 @@
 #define PIC_ICW4_BUFMASTER 0x0c
 #define PIC_ICW4_SFNM      0x10
 
+#define PIC_IRQBASE 0x20
+
 static bool_t use_new_pic;
 
-bool_t
+static bool_t
 has_apic(struct bootinfo_arch* bootinfo) {
   struct cpuid_regs regs;
   cpuid(CPUID_STDFN_00000001, &regs);
   return (regs.edx & (1 << 9)) == 0;
 }
 
-status_t
+static status_t
 new_pic_init(struct bootinfo_arch* bootinfo) {
   /* disable 8259 PICs by masking all interrupts */
   io_outb(PIC1_DATA, PIC_DISABLE);
@@ -47,7 +49,7 @@ new_pic_init(struct bootinfo_arch* bootinfo) {
 }
 
 static void
-old_pic_remap(uint8_t off1, uint8_t off2) {
+old_pic_remap(uint8_t off) {
   uint8_t pic1_mask, pic2_mask;
 
   /* save old interrupt masks */
@@ -59,9 +61,9 @@ old_pic_remap(uint8_t off1, uint8_t off2) {
   io_outb(PIC2_COMM, PIC_ICW1_INIT | PIC_ICW1_ICW4);
   IOWAIT();
 
-  io_outb(PIC1_DATA, off1);
+  io_outb(PIC1_DATA, off);
   IOWAIT();
-  io_outb(PIC2_DATA, off2);
+  io_outb(PIC2_DATA, off + 8);
   IOWAIT();
 
   io_outb(PIC1_DATA, 1 << 2);
@@ -97,6 +99,9 @@ old_pic_unmask(uint8_t irq) {
 
 static void
 old_pic_ack(uint8_t irq) {
+  if (irq < PIC_IRQBASE)
+    return;
+  irq -= PIC_IRQBASE;
   if (irq >= 8)
     io_outb(PIC2_COMM, PIC_EOI);
   io_outb(PIC1_COMM, PIC_EOI);
@@ -104,7 +109,7 @@ old_pic_ack(uint8_t irq) {
 
 static status_t
 old_pic_init(void) {
-  old_pic_remap(0x10, 0x18);
+  old_pic_remap(PIC_IRQBASE);
   /* mask all interrupts */
   io_outb(PIC1_DATA, PIC_DISABLE);
   io_outb(PIC2_DATA, PIC_DISABLE);

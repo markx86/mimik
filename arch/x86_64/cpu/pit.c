@@ -30,12 +30,12 @@
 
 #define PIT_FREQ 1193182
 
-#define PIT_IRQ 16
+#define PIT_IRQ 32
 
-static long
+static status_t
 pit_handler(struct isr_frame* isr_frame) {
-  /* do nothing (for now) */
-  return 0;
+  ASSERT(isr_frame->isr_n == PIT_IRQ);
+  return SUCCESS;
 }
 
 void
