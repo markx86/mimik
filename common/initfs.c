@@ -72,6 +72,7 @@ initfs_lookup(
     const char* path,
     ptr_t* file_ptr,
     size_t* file_size) {
+  size_t sz;
   struct ustar_header* hdr = (struct ustar_header*)fs->virt_start;
   ASSERT(hdr != NULL);
   ASSERT(file_ptr != NULL);
@@ -79,11 +80,11 @@ initfs_lookup(
   ASSERT(path != NULL);
   ASSERT(str_length(path) < sizeof(hdr->file_name));
   while ((addr_t)hdr < fs->virt_end) {
-    size_t sz;
     ASSERT(str_equal(hdr->ustar_string, "ustar"));
     ASSERT(str_nequal(hdr->ustar_version, "00", 2));
     sz = oct_str_to_num(hdr->file_size, sizeof(hdr->file_size));
     if (str_equal(hdr->file_name, path)) {
+      ASSERT(hdr->type_flag == TYPE_FLAG_FILE);
       *file_size = sz;
       *file_ptr = hdr + 1;
       return SUCCESS;

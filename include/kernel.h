@@ -1,8 +1,8 @@
 #ifndef MIMIK_KERNEL_H
 #define MIMIK_KERNEL_H
 
+#include <common/initfs.h>
 #include <boot/bootinfo.h>
-#include <fs/initfs.h>
 #include <log/log.h>
 
 struct kernel_config {
