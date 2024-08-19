@@ -35,8 +35,10 @@ CCFLAGS = \
 	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
 	-I$(SOURCEDIR)/arch/$(ARCH)/include
+# TODO: figure out why the fuck it needs --no-relax
 LDFLAGS = \
-	-nostdlib
+	-nostdlib	\
+	--no-relax
 QEMUFLAGS = \
 	-cpu qemu64,+ssse3,+sse4.1,+sse4.2		\
 	-smp cpus=1,cores=2,threads=2,maxcpus=4	\
