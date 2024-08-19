@@ -1,4 +1,4 @@
-#include <fs/initfs.h>
+#include <common/initfs.h>
 #include <util/compiler.h>
 #include <mem/str.h>
 #include <mem/mem.h>
