@@ -14,8 +14,6 @@ kernel_parse_bootinfo(struct bootinfo* bootinfo) {
   char* s;
   struct bootinfo_module* module;
 
-  kcfg.bootinfo = bootinfo;
-
   /* Parse cmdline. */
   for (s = bootinfo->cmdline; *s != '\0'; s++) {
   }
@@ -54,6 +52,7 @@ kernel_main(
     struct bootinfo* bootinfo,
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {
+  kcfg.bootinfo = bootinfo;
   pm_init();
   vm_init();
   mm_init();
