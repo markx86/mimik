@@ -24,6 +24,7 @@ DEFINES = \
 CCFLAGS = \
 	-ffreestanding 							\
 	-fstack-protector						\
+	-fpic									\
 	-nostdinc								\
 	-Wall 									\
 	-Wextra									\
@@ -35,6 +36,7 @@ CCFLAGS = \
 # TODO: figure out why the fuck it needs --no-relax
 LDFLAGS = \
 	-nostdlib	\
+	--no-pie	\
 	--no-relax
 QEMUFLAGS = \
 	-cpu qemu64,+ssse3,+sse4.1,+sse4.2		\
