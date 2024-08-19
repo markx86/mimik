@@ -23,6 +23,7 @@ DEFINES = \
 	-DMIMIK_ARCH_$(call uppercase, $(ARCH))
 CCFLAGS = \
 	-ffreestanding 							\
+	-fstack-protector						\
 	-nostdinc								\
 	-mno-red-zone 							\
 	-mno-sse								\
