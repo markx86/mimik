@@ -13,7 +13,6 @@ SECTIONS {
 	}
 
 	.entry.bss : {
-		*(.multiboot.bss)
 		*(.entry.bss)
 	}
 

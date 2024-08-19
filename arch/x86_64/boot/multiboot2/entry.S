@@ -1,13 +1,6 @@
 #define ASM_FILE
 #include "multiboot2.h"
 
-.section .multiboot.bss, "aw", @nobits
-.align 8
-stack_bottom:
-  .skip 64
-stack_top:
-#define STACK (stack_top-8)
-
 .section .multiboot.text, "ax"
 .code32
 
@@ -17,7 +10,7 @@ _start:
   cmpl $MULTIBOOT2_BOOTLOADER_MAGIC, %eax
   jne _fail
   /* set the (temporary) stack */
-  movl $STACK, %esp
+  movl $stub_stack, %esp
   movl %esp, %ebp
   /* parse the multiboot info struct */
   call init_bootinfo

@@ -1,9 +1,8 @@
 .section .entry.bss, "aw", @nobits
 .align 8
-stack_bottom:
   .skip 4096
-stack_top:
-#define STACK (stack_top-8)
+.global stub_stack
+stub_stack:
 
 #define BOOTINFOENTRY(name, asm) \
   .global name;                   \
@@ -24,7 +23,7 @@ _bootinfo:
 .code32
 
 /**
- * _stub32: entry for protected mode bootprotocols
+ * _stub32: entry for protected mode boot protocols
  *
  * Expected machine state:
  * - rax: pointer to bootinfo data end address
@@ -34,7 +33,7 @@ _stub32:
   /* disable interrupts */
   cli
   /* setup stack */
-  movl $STACK, %esp
+  movl $stub_stack, %esp
   /* set the last return address to a stub function */
   movl $_fail, (%esp)
   /* store the bootinfo data end address */
@@ -133,38 +132,43 @@ enable_features:
   movl %eax, %cr0
   ret
 
-.section .text, "ax"
 .code64
 
 /**
- * _stub64: entry for long mode bootprotocols
+ * _stub64: entry for long mode boot protocols
  *
  * Expected machine state:
  * - a valid 64 bit gdt with the same segments as the one defined in gdt.S
- * - the kernel mapped correctly into higher half
- * - (rsp): pointer to bootinfo data end address
+ * - the page tables are identity mapped
+ * - (rsp) is a valid pointer to bootinfo data end address
  */
 .global _stub64
 _stub64:
-  /* kernel main parameters (translated into higher half addresses) */
-  movq $(_bootinfo+HIGHER_HALF), %rdi
-  movq $(_bootinfo_data+HIGHER_HALF), %rsi
-  popq %rdx
-  addq $HIGHER_HALF, %rdx
+  call map_higher_half
   /* load the higher half stack */
-  movq $(STACK+HIGHER_HALF), %rsp
+  movq $(HIGHER_HALF+stub_stack), %rsp
   movq %rsp, %rbp
   /* set the fail address */
-  movq $(_fail+HIGHER_HALF), (%rsp)
+  movq $(HIGHER_HALF+_fail), (%rsp)
   /* make every pointer in _bootinfo a higher half pointer */
   addq $HIGHER_HALF, (_bootinfo+0)
   addq $HIGHER_HALF, (_bootinfo+24)
-  movq (_bootinfo+8), %rax
+  movq $(_bootinfo+8), %rsi
 0:
+  movq %rsi, %rdi
+  lodsq
+  test %rax, %rax
+  jz 1f
   addq $HIGHER_HALF, %rax
-  movq (%rax), %rax
-  cmpq $0, %rax
-  jne 0b
+  stosq
+  mov %rax, %rsi
+  jmp 0b
+1:
+  /* kernel main parameters (translated into higher half addresses) */
+  movq $(HIGHER_HALF+_bootinfo), %rdi
+  movq $(HIGHER_HALF+_bootinfo_data), %rsi
+  popq %rdx
+  addq $HIGHER_HALF, %rdx
   call kernel_main
 stall:
   hlt
