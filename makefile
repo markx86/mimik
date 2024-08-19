@@ -25,14 +25,11 @@ CCFLAGS = \
 	-ffreestanding 							\
 	-fstack-protector						\
 	-nostdinc								\
-	-mno-red-zone 							\
-	-mno-sse								\
 	-Wall 									\
 	-Wextra									\
 	-Wconversion							\
 	-O0										\
 	-std=c99								\
-	-mcmodel=kernel							\
 	-I$(SOURCEDIR)/include					\
 	-I$(SOURCEDIR)/arch/$(ARCH)/include
 # TODO: figure out why the fuck it needs --no-relax

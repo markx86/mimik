@@ -13,6 +13,9 @@ DEFINES += \
 	-DHIGHER_HALF=0xffffffff80000000
 
 CCFLAGS += \
+	-mno-red-zone 							\
+	-mno-sse								\
+	-mcmodel=large							\
 	-mstack-protector-guard=global
 # TODO: use per thread stack protector
 #	-mstack-protector-guard=tls				\
