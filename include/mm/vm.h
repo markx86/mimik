@@ -30,16 +30,10 @@ status_t vm_map_bytes(
 #define vm_map_range(table, paddr_start, paddr_end, vaddr_hint, flags) \
   vm_map_bytes(table, paddr_start, paddr_end - paddr_start, vaddr_hint, flags)
 
-status_t vmk_map_pages(
-    addr_t paddr_start,
-    size_t pages,
-    addr_t* vaddr_hint,
-    int flags);
-status_t vmk_map_bytes(
-    addr_t paddr_start,
-    size_t bytes,
-    addr_t* vaddr_hint,
-    int flags);
+status_t
+vmk_map_pages(addr_t paddr_start, size_t pages, addr_t* vaddr_hint, int flags);
+status_t
+vmk_map_bytes(addr_t paddr_start, size_t bytes, addr_t* vaddr_hint, int flags);
 #define vmk_map_page(paddr, vaddr_hint, flags) \
   vmk_map_pages(paddr, 1, vaddr_hint, flags)
 #define vmk_map_range(paddr_start, paddr_end, vaddr_hint, flags) \
@@ -64,12 +58,12 @@ status_t vm_set_backing(ptr_t table, addr_t vaddr, addr_t paddr);
 status_t vmk_set_backing(addr_t vaddr, addr_t paddr);
 
 #define vm_reserve_pages(table, vaddr_hint, pages, flags) \
-  vm_map_pages(table, (addr_t) - BYTES(pages), pages, vaddr_hint, flags)
+  vm_map_pages(table, (addr_t)-BYTES(pages), pages, vaddr_hint, flags)
 #define vmk_reserve_pages(vaddr_hint, pages, flags) \
-  vmk_map_pages((addr_t) - BYTES(pages), pages, vaddr_hint, flags)
+  vmk_map_pages((addr_t)-BYTES(pages), pages, vaddr_hint, flags)
 
-  
-status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags);
+status_t
+vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags);
 #define vm_flag_range(table, vaddr_start, vaddr_end, flags) \
   vm_flag_pages(table, vaddr_start, PAGES(vaddr_end - vaddr_start), flags)
 

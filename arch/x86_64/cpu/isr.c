@@ -175,7 +175,8 @@ isr_register(size_t irq, isr_t handler, isr_t* old_handler) {
   isrs[irq] = handler;
 }
 
-void isr_common(struct isr_frame* frame) {
+void
+isr_common(struct isr_frame* frame) {
   isr_t isr;
   size_t n = frame->isr_n;
   ASSERT(n <= UINT8_MAX);

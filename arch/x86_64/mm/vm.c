@@ -379,11 +379,7 @@ vm_map_bytes(
 }
 
 status_t
-vmk_map_pages(
-    addr_t paddr_start,
-    size_t pages,
-    addr_t* vaddr_hint,
-    int flags) {
+vmk_map_pages(addr_t paddr_start, size_t pages, addr_t* vaddr_hint, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
@@ -394,11 +390,7 @@ vmk_map_pages(
 }
 
 status_t
-vmk_map_bytes(
-    addr_t paddr_start,
-    size_t bytes,
-    addr_t* vaddr_hint,
-    int flags) {
+vmk_map_bytes(addr_t paddr_start, size_t bytes, addr_t* vaddr_hint, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
@@ -581,7 +573,12 @@ vmk_set_backing(addr_t vaddr, addr_t paddr) {
 }
 
 static status_t
-recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, int flags) {
+recurse_flag(
+    struct pt* pt,
+    size_t* index,
+    size_t level,
+    size_t* pages,
+    int flags) {
   size_t i;
   addr_t pt_vaddr;
   status_t res;
@@ -604,12 +601,8 @@ recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, int flag
 
     pt_vaddr = map_page_tmp(PTEPADDR(pte), VM_FLAG_WRITABLE);
     update_pt_pte_flags(pt, i, flags);
-    res = recurse_flag(
-        (struct pt*)pt_vaddr,
-        index + 1,
-        level + 1,
-        pages,
-        flags);
+    res =
+        recurse_flag((struct pt*)pt_vaddr, index + 1, level + 1, pages, flags);
     unmap_page_tmp(pt_vaddr);
 
     if (ISERROR(res))
@@ -619,7 +612,8 @@ recurse_flag(struct pt* pt, size_t* index, size_t level, size_t* pages, int flag
   return SUCCESS;
 }
 
-status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags) {
+status_t
+vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags) {
   size_t indices[4];
   union vaddr vaddr_indices = {.address = vaddr_start};
 
@@ -634,7 +628,8 @@ status_t vm_flag_pages(ptr_t table, addr_t vaddr_start, size_t pages, int flags)
   return recurse_flag(table, indices, 0, &pages, flags);
 }
 
-status_t vmk_flag_pages(addr_t vaddr_start, size_t pages, int flags) {
+status_t
+vmk_flag_pages(addr_t vaddr_start, size_t pages, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(ISKVADDR(vaddr_start));
   return vm_flag_pages(kpml4, vaddr_start, pages, flags);

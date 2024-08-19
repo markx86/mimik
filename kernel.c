@@ -31,11 +31,17 @@ kernel_remap(void) {
   status_t res;
 
   /* remap kernel entry (if present) as RW- */
-  res = vmk_flag_range(KERNEL_VADDR_START, KERNEL_TEXT_START, VM_FLAG_READ | VM_FLAG_WRITABLE);
+  res = vmk_flag_range(
+      KERNEL_VADDR_START,
+      KERNEL_TEXT_START,
+      VM_FLAG_READ | VM_FLAG_WRITABLE);
   ASSERT(res == SUCCESS);
 
   /* remap kernel text as R-X */
-  res = vmk_flag_range(KERNEL_TEXT_START, KERNEL_TEXT_END, VM_FLAG_READ | VM_FLAG_EXECUTABLE);
+  res = vmk_flag_range(
+      KERNEL_TEXT_START,
+      KERNEL_TEXT_END,
+      VM_FLAG_READ | VM_FLAG_EXECUTABLE);
   ASSERT(res == SUCCESS);
 
   /* remap kernel rodata as R-- */
@@ -43,7 +49,10 @@ kernel_remap(void) {
   ASSERT(res == SUCCESS);
 
   /* remap kernel bss and data as RW- */
-  res = vmk_flag_range(KERNEL_DATA_START, KERNEL_DATA_END, VM_FLAG_READ | VM_FLAG_WRITABLE);
+  res = vmk_flag_range(
+      KERNEL_DATA_START,
+      KERNEL_DATA_END,
+      VM_FLAG_READ | VM_FLAG_WRITABLE);
   ASSERT(res == SUCCESS);
 }
 
