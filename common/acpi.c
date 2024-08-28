@@ -44,7 +44,7 @@ map_table(addr_t paddr, struct acpi_sdt_header** out) {
 }
 
 static bool_t
-checksum_matches(void* ptr, size_t sz) {
+checksum_matches(ptr_t ptr, size_t sz) {
   uint8_t c, *p = ptr;
   for (c = 0; sz > 0; --sz)
     c += *(p++);

@@ -1,9 +1,9 @@
 uppercase = $(shell echo $(1) | tr 'a-z' 'A-Z')
 findsources = $(shell find $(1) -type f -name '*.S' -or -name '*.c' $(2))
 
-BUILDTYPE = DEBUG
-VERSION = 0.0.1
-ARCH = $(shell uname -m)
+BUILDTYPE ?= DEBUG
+VERSION ?= 0.0.1
+ARCH ?= $(shell uname -m)
 
 BUILDDIR = $(abspath ./build)
 SOURCEDIR = $(abspath .)
@@ -64,8 +64,7 @@ else
 CCFLAGS += -Werror
 endif
 
-OBJECTS = $(patsubst $(SOURCEDIR)/%.c,$(BUILDDIR)/%_c.o,$(SOURCES))
-OBJECTS := $(patsubst $(SOURCEDIR)/%.S,$(BUILDDIR)/%_S.o,$(OBJECTS))
+OBJECTS = $(patsubst $(SOURCEDIR)/%,$(BUILDDIR)/%.o,$(SOURCES))
 
 .PHONY: run debug clean fmt
 
@@ -86,11 +85,11 @@ clean:
 fmt:
 	$(CLANGFMT) -i $(shell find $(SOURCEDIR) -name '*.c' -or -name '*.h' -type f)
 
-$(BUILDDIR)/%_c.o: $(SOURCEDIR)/%.c
+$(BUILDDIR)/%.c.o: $(SOURCEDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
 	
-$(BUILDDIR)/%_S.o: $(SOURCEDIR)/%.S
+$(BUILDDIR)/%.S.o: $(SOURCEDIR)/%.S
 	@mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS) $(DEFINES) -c $< -o $@
 
