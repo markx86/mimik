@@ -2,12 +2,14 @@
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <mm/mm.h>
+#include <mem/mem.h>
+#include <mem/layout.h>
 #include <cpu/int.h>
 #include <cpu/isr.h>
 #include <arch.h>
 #include <assert.h>
 
-struct kernel_config kcfg;
+struct kernel_singleton K;
 
 static void
 kernel_parse_bootinfo(struct bootinfo* bootinfo) {
@@ -20,7 +22,7 @@ kernel_parse_bootinfo(struct bootinfo* bootinfo) {
 
   /* Find modules. */
   for (module = bootinfo->modules; module != NULL; module = module->next) {
-    kcfg.fs = initfs_from_module(module);
+    K.fs = initfs_from_module(module);
     /* TODO: support other modules */
     break;
   }
@@ -32,28 +34,34 @@ kernel_remap(void) {
 
   /* remap kernel entry (if present) as RW- */
   res = vmk_flag_range(
-      KERNEL_VADDR_START,
-      KERNEL_TEXT_START,
+      LAYOUT_VADDR_START,
+      LAYOUT_TEXT_START,
       VM_FLAG_READ | VM_FLAG_WRITABLE);
   ASSERT(res == SUCCESS);
 
   /* remap kernel text as R-X */
   res = vmk_flag_range(
-      KERNEL_TEXT_START,
-      KERNEL_TEXT_END,
+      LAYOUT_TEXT_START,
+      LAYOUT_TEXT_END,
       VM_FLAG_READ | VM_FLAG_EXECUTABLE);
   ASSERT(res == SUCCESS);
 
   /* remap kernel rodata as R-- */
-  res = vmk_flag_range(KERNEL_RODATA_START, KERNEL_RODATA_END, VM_FLAG_READ);
+  res = vmk_flag_range(LAYOUT_RODATA_START, LAYOUT_RODATA_END, VM_FLAG_READ);
   ASSERT(res == SUCCESS);
 
   /* remap kernel bss and data as RW- */
   res = vmk_flag_range(
-      KERNEL_DATA_START,
-      KERNEL_DATA_END,
+      LAYOUT_DATA_START,
+      LAYOUT_DATA_END,
       VM_FLAG_READ | VM_FLAG_WRITABLE);
   ASSERT(res == SUCCESS);
+}
+
+static void
+kernel_init_singleton(struct bootinfo* bootinfo) {
+  mem_set(&K, 0, sizeof(K));
+  K.bootinfo = bootinfo;
 }
 
 void
@@ -61,7 +69,7 @@ kernel_main(
     struct bootinfo* bootinfo,
     addr_t bootinfo_data_start,
     addr_t bootinfo_data_end) {
-  kcfg.bootinfo = bootinfo;
+  kernel_init_singleton(bootinfo);
   pm_init();
   vm_init();
   mm_init();

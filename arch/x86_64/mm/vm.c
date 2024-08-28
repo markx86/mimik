@@ -2,6 +2,7 @@
 #include <mm/pm.h>
 #include <mem/page.h>
 #include <mem/mem.h>
+#include <mem/layout.h>
 #include <log/log.h>
 #include <util/compiler.h>
 #include <types.h>
@@ -53,7 +54,7 @@ struct pt {
 #define ISFLAGSET(flags, flag)   ((flags & VM_FLAG_##flag) != 0)
 #define ISFLAGUNSET(flags, flag) ((flags & VM_FLAG_##flag) == 0)
 
-#define ISKVADDR(a) ((a) >= KERNEL_HEAP_START)
+#define ISKVADDR(a) ((a) >= LAYOUT_HEAP_START)
 
 static size_t first_free_tmp_index;
 static struct pt* kpml4;
@@ -383,7 +384,7 @@ vmk_map_pages(addr_t paddr_start, size_t pages, addr_t* vaddr_hint, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
-    *vaddr_hint = KERNEL_VADDR_END;
+    *vaddr_hint = LAYOUT_VADDR_END;
   else
     ASSERT(ISKVADDR(*vaddr_hint));
   return vm_map_pages(kpml4, paddr_start, pages, vaddr_hint, flags);
@@ -394,7 +395,7 @@ vmk_map_bytes(addr_t paddr_start, size_t bytes, addr_t* vaddr_hint, int flags) {
   ASSERT(ISFLAGUNSET(flags, USER));
   ASSERT(vaddr_hint != NULL);
   if (*vaddr_hint == 0)
-    *vaddr_hint = KERNEL_VADDR_END;
+    *vaddr_hint = LAYOUT_VADDR_END;
   else
     ASSERT(ISKVADDR(*vaddr_hint));
   return vm_map_bytes(kpml4, paddr_start, bytes, vaddr_hint, flags);

@@ -2,9 +2,10 @@
 #include <mm/vm.h>
 #include <mm/mm.h>
 #include <mem/page.h>
+#include <mem/layout.h>
+#include <mem/mem.h>
 #include <structs/bitmap.h>
 #include <structs/list.h>
-#include <mem/mem.h>
 #include <assert.h>
 #include <kernel.h>
 
@@ -63,9 +64,10 @@ init_first_bitmap(void) {
 
 void
 pm_init(void) {
+  ASSERT(K.subsys_init.pm == FALSE);
   init_first_bitmap();
-  compute_mem_size(&kcfg.bootinfo->mem_map);
-  pm_try_lock_range(KERNEL_PADDR_START, KERNEL_PADDR_END);
+  compute_mem_size(&K.bootinfo->mem_map);
+  pm_try_lock_range(LAYOUT_PADDR_START, LAYOUT_PADDR_END);
   next_bitmap_page = pm_request_page();
   LOGSUCCESS("physical memory manager initialized");
 }

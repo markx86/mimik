@@ -1,6 +1,7 @@
 #include <mm/mm.h>
 #include <mm/pm.h>
 #include <mem/mem.h>
+#include <mem/layout.h>
 #include <log/log.h>
 #include <structs/list.h>
 #include <assert.h>
@@ -38,7 +39,7 @@ struct slab {
 };
 
 #define SLABTYPE(addr) (((addr) >> 36) & 0xffff)
-#define SLABBASE(type) (KERNEL_HEAP_START + ((addr_t)(type) << 36))
+#define SLABBASE(type) (LAYOUT_HEAP_START + ((addr_t)(type) << 36))
 
 static struct slab slabs[SLAB_MAX];
 
