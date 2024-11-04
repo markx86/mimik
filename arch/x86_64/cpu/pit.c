@@ -32,10 +32,9 @@
 
 #define PIT_IRQ 32
 
-static status_t
+static void
 pit_handler(struct isr_frame* isr_frame) {
   ASSERT(isr_frame->isr_n == PIT_IRQ);
-  return SUCCESS;
 }
 
 void

@@ -63,6 +63,11 @@ struct isr_frame {
   reg_t rbp;
   uint64_t isr_n;
   uint64_t error;
+  reg_t rip;
+  reg_t cs;
+  reg_t rflags;
+  reg_t rsp;
+  reg_t ss;
 };
 
 #endif

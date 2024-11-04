@@ -106,7 +106,7 @@ set_idt_entry(struct idt_entry* entry, ptr_t address, enum gate_type type) {
 #define TRAP(n)      set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_TRAP)
 #define INTERRUPT(n) set_idt_entry(&idt[n], (ptr_t)(&isr##n), GATE_INTERRUPT)
 
-isr_t isrs[MAX_IDT_ENTRIES];
+static isr_t isrs[MAX_IDT_ENTRIES];
 
 void
 isr_init(void) {
