@@ -25,6 +25,7 @@ setup_paging:
   addl $0xfff, %edi
   andl $~0xfff, %edi
   /* zero out page tables */
+  pushl %edi /* pml4 paddr */
   call next_cleared_pt
   pushl %edi /* pdp  paddr */
   call next_cleared_pt
@@ -34,16 +35,10 @@ setup_paging:
   call next_cleared_pt
 
   /* store map start paddr */
-  movl $_kernel_paddr_start, %edx
+  movl $_entry_paddr_start, %edx
   andl $~0xfff, %edx
-  /* compute the number of pages we should map */
-  leal SIZE_4KB(%edi), %ecx
-  addl $0xfff, %ecx
-  andl $~0xfff, %ecx
-  subl %edx, %ecx
-  shrl $12, %ecx
-  /* save the pointer to pt */
-  pushl %edi
+  /* restore the pointer to pt */
+  mov (%esp), %edi
   /* save start paddr into %esi */
   movl %edx, %esi
   /* compute start page index in the pt */
@@ -51,6 +46,9 @@ setup_paging:
   movl %edx, %eax
   andl $0x1ff, %eax
   leal (%edi,%eax,8), %edi
+  /* compute the maximum number of pages we can map before we fill the pt */
+  movl $512, %ecx
+  subl %eax, %ecx
   /* map pages */
   leal ENTRY_FLAGS(%esi), %eax
 0:
@@ -60,7 +58,7 @@ setup_paging:
   loop 0b
 
   movl $3, %ecx
-  /* get the pt paddr */
+  /* restore %esi to the pt paddr */
   popl %esi
 1:
   /* get the next pt paddr */
@@ -70,7 +68,7 @@ setup_paging:
   movl %edx, %eax
   andl $0x1ff, %eax
   leal (%edi,%eax,8), %edi
-  /* generate pt entry into pd */
+  /* create pt entry into pd */
   orl $ENTRY_FLAGS, %esi
   movl %esi, (%edi)
   /* set %esi to this pt paddr */
