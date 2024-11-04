@@ -16,4 +16,6 @@
 #define PACKED     ATTRIBUTES(packed)
 #define ALIGNED(s) ATTRIBUTES(aligned(s))
 
+#define ACCESSAS(t, v) *((t*)&v)
+
 #endif
