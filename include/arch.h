@@ -3,6 +3,6 @@
 
 #include <boot/bootinfo.h>
 
-status_t arch_init(struct bootinfo* bootinfo);
+status_t arch_init(void);
 
 #endif

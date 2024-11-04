@@ -41,11 +41,11 @@ check_and_enable_features(void) {
 }
 
 status_t
-arch_init(struct bootinfo* bootinfo) {
+arch_init(void) {
   gdt_load();
   check_and_enable_features();
-  acpi_init(&bootinfo->arch.acpi);
-  pic_init(&bootinfo->arch);
+  acpi_init();
+  pic_init();
   pit_init();
   return SUCCESS;
 }

@@ -32,14 +32,14 @@
 static bool_t use_new_pic;
 
 static bool_t
-has_apic(struct bootinfo_arch* bootinfo) {
+has_apic(void) {
   struct cpuid_regs regs;
   cpuid(CPUID_STDFN_00000001, &regs);
   return (regs.edx & (1 << 9)) == 0;
 }
 
 static status_t
-new_pic_init(struct bootinfo_arch* bootinfo) {
+new_pic_init(void) {
   /* disable 8259 PICs by masking all interrupts */
   io_outb(PIC1_DATA, PIC_DISABLE);
   io_outb(PIC2_DATA, PIC_DISABLE);
@@ -93,7 +93,7 @@ static void
 old_pic_unmask(uint8_t irq) {
   uint8_t value, port = irq < 8 ? PIC1_DATA : PIC2_DATA;
   irq &= 7;
-  value = io_inb(port) & (uint8_t) ~(1 << irq);
+  value = io_inb(port) & (uint8_t)~(1 << irq);
   io_outb(port, value);
 }
 
@@ -141,7 +141,7 @@ pic_unmask(uint8_t irq) {
 }
 
 status_t
-pic_init(struct bootinfo_arch* bootinfo) {
-  use_new_pic = has_apic(bootinfo);
-  return use_new_pic ? new_pic_init(bootinfo) : old_pic_init();
+pic_init(void) {
+  use_new_pic = has_apic();
+  return use_new_pic ? new_pic_init() : old_pic_init();
 }

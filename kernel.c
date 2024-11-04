@@ -12,16 +12,16 @@
 struct kernel_singleton K;
 
 static void
-kernel_parse_bootinfo(struct bootinfo* bootinfo) {
+kernel_parse_bootinfo(void) {
   char* s;
   struct bootinfo_module* module;
 
   /* Parse cmdline. */
-  for (s = bootinfo->cmdline; *s != '\0'; s++) {
+  for (s = K.bootinfo->cmdline; *s != '\0'; s++) {
   }
 
   /* Find modules. */
-  for (module = bootinfo->modules; module != NULL; module = module->next) {
+  for (module = K.bootinfo->modules; module != NULL; module = module->next) {
     K.fs = initfs_from_module(module);
     /* TODO: support other modules */
     break;
@@ -72,8 +72,9 @@ kernel_main(struct bootinfo* bootinfo) {
   mm_init();
   kernel_remap();
   isr_init();
-  ASSERT(arch_init(bootinfo) == SUCCESS);
+  ASSERT(arch_init() == SUCCESS);
   int_enable();
-  kernel_parse_bootinfo(bootinfo);
+  kernel_parse_bootinfo();
+  K.inited.kernel = TRUE;
   ASSERT(0 && "Hello from MIMIK!");
 }

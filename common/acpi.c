@@ -160,9 +160,10 @@ acpi_init_xsdp(struct acpi_xsdp* xsdp) {
 }
 
 status_t
-acpi_init(struct bootinfo_acpi* acpi) {
+acpi_init(void) {
   status_t res;
   struct acpi_sdt_header** tbl;
+  struct bootinfo_acpi* acpi = &K.bootinfo->arch.acpi;
   switch (acpi->type) {
     case ACPI_TYPE_RSDP:
       res = acpi_init_rsdp(&acpi->rsdp);
