@@ -7,14 +7,17 @@
 void ATTRIBUTES(noreturn)
     _assert_fail(const char* file, size_t line, const char* msg);
 
-#define ASSERT(x)                           \
-  do {                                      \
-    if (UNLIKELY(!(x)))                     \
-      _assert_fail(__FILE__, __LINE__, #x); \
+#define _ASSERTFAIL(msg) _assert_fail(__FILE__, __LINE__, msg)
+
+#define ASSERT(x)       \
+  do {                  \
+    if (UNLIKELY(!(x))) \
+      _ASSERTFAIL(#x);  \
   } while (0)
 
 #define STATICASSERT(x, m) _Static_assert(x, m)
 
-#define TODO(msg) ASSERT(0 && "unimplemented: " msg)
+#define TODO(msg)     _ASSERTFAIL("unimplemented " msg)
+#define UNREACHABLE() _ASSERTFAIL("unreachable")
 
 #endif

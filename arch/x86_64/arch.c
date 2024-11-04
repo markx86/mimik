@@ -11,8 +11,10 @@ check_and_enable_features(void) {
 
   cpuid(CPUID_STDFN_00000001, &r);
   ASSERT(r.edx & (1 << 24)); /* check for FXSAVE/FXRSTOR instructions support */
-  /* NOTE: we're going to assume every processor x86 comes after 2008
-     and supports all the legacy SIMD instructions */
+  /*
+   * NOTE: we're going to assume every processor x86 comes after 2008
+   *       and supports all the legacy SIMD instructions
+   */
   ASSERT(r.edx & (1 << 25)); /* check for SSE1   support */
   ASSERT(r.edx & (1 << 26)); /* check for SSE2   support */
   ASSERT(r.ecx & (1 << 0));  /* check for SSE3   support */
@@ -29,10 +31,7 @@ check_and_enable_features(void) {
       "mov %%cr0, %%rax;"
       "and $~(1 << 2), %%rax;"
       "or $(1 << 1), %%rax;"
-      "mov %%rax, %%cr0"
-      :
-      :
-      : "rax");
+      "mov %%rax, %%cr0" : : : "rax");
 
   cpuid(CPUID_EXTFN_80000001, &r);
   /* NOTE: we'll need NX bit support and SYSCALL/SYSRET support */
