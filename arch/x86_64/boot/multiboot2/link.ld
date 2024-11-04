@@ -3,9 +3,9 @@ ENTRY(_start)
 
 SECTIONS {
 	. = 0x0000000000010000;
-	
-	_kernel_paddr_start = .;
-	_kernel_vaddr_start = . + HIGHER_HALF;
+
+	_entry_paddr_start = .;
+	_entry_vaddr_start = .;
 	
 	.entry.data : {
 		KEEP(*(.multiboot.data))
@@ -21,27 +21,39 @@ SECTIONS {
 		*(.entry.text)
 	}
 
+	_entry_paddr_end = .;
+	_entry_vaddr_end = .;
+
+	. = ALIGN(4K);
+
+	_kernel_paddr_start = .;
+	_kernel_vaddr_start = . + HIGHER_HALF;
+
 	. += HIGHER_HALF;
 	
 	.text ALIGN(4K) : AT(ADDR(.text) - HIGHER_HALF) {
 		_kernel_text_start = .;
-		*(.text)
+		*(.text*)
+		*(.ltext*)
 		_kernel_text_end = .;
 	}
 
 	.rodata ALIGN(4K) : AT(ADDR(.rodata) - HIGHER_HALF) {
 		_kernel_rodata_start = .;
-		*(.rodata)
+		*(.rodata*)
+		*(.lrodata*)
 		_kernel_rodata_end = .;
 	}
 
 	.data ALIGN(4K) : AT(ADDR(.data) - HIGHER_HALF) {
 		_kernel_data_start = .;
-		*(.data)
+		*(.data*)
+		*(.ldata*)
 	}
 
 	.bss : AT(ADDR(.bss) - HIGHER_HALF) {
-		*(.bss)
+		*(.bss*)
+		*(.lbss*)
 		_kernel_data_end = .;
 	}
 
