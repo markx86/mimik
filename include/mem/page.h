@@ -3,8 +3,9 @@
 
 #include <util/align.h>
 #include <util/size.h>
+#include <mem/page-arch.h>
 
-#define PAGE_SIZE SIZE_4KB
+#define PAGE_SIZE (1 << PAGE_SHIFT)
 
 #define PAGES(b) ((b + PAGE_SIZE - 1) / PAGE_SIZE)
 #define BYTES(p) ((p) * PAGE_SIZE)

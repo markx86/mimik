@@ -2,6 +2,7 @@
 #include <util/compiler.h>
 #include <mem/str.h>
 #include <mem/mem.h>
+#include <mem/layout.h>
 #include <mm/pm.h>
 #include <mm/vm.h>
 #include <assert.h>
@@ -51,18 +52,16 @@ initfs_from_module(struct bootinfo_module* mod) {
   struct initfs fs;
   fs.phys_start = mod->start_address;
   fs.phys_end = mod->end_address;
-  fs.virt_start = 0;
-  pm_try_lock_range(fs.phys_start, fs.phys_end);
-  vmk_map_range(fs.phys_start, fs.phys_end, &fs.virt_start, 0);
-  fs.virt_end = fs.virt_start + (fs.phys_end - fs.phys_start);
+  pm_lock_range(fs.phys_start, fs.phys_end);
+  fs.virt_start = layout_paddr_to_vaddr(fs.phys_start);
+  fs.virt_end = layout_paddr_to_vaddr(fs.phys_end);
   return fs;
 }
 
 void
 initfs_release(struct initfs* fs) {
   ASSERT(fs->virt_start != 0);
-  vmk_unmap_range(fs->virt_start, fs->virt_end);
-  pm_try_release_range(fs->phys_start, fs->phys_end);
+  pm_release_range(fs->phys_start, fs->phys_end);
   mem_set(fs, 0, sizeof(*fs));
 }
 
@@ -74,11 +73,17 @@ initfs_lookup(
     size_t* file_size) {
   size_t sz;
   struct ustar_header* hdr = (struct ustar_header*)fs->virt_start;
-  ASSERT(hdr != NULL);
+
+  /* ensure the fs struct is valid */
+  ASSERT(fs != NULL);
+  ASSERT(fs->virt_start != 0);
+  ASSERT(fs->virt_end != 0);
+  /* ensure the arguments are valid */
   ASSERT(file_ptr != NULL);
   ASSERT(file_size != NULL);
   ASSERT(path != NULL);
   ASSERT(str_length(path) < sizeof(hdr->file_name));
+
   while ((addr_t)hdr < fs->virt_end) {
     ASSERT(str_equal(hdr->ustar_string, "ustar"));
     ASSERT(str_nequal(hdr->ustar_version, "00", 2));

@@ -1,256 +1,220 @@
 #include <mm/pm.h>
 #include <mm/vm.h>
-#include <mm/mm.h>
-#include <mem/page.h>
-#include <mem/layout.h>
 #include <mem/mem.h>
-#include <structs/bitmap.h>
+#include <mem/layout.h>
 #include <structs/list.h>
-#include <assert.h>
 #include <kernel.h>
-
-#define BITMAP_BYTES      PAGE_SIZE
-#define BITMAP_SIZE       (BITMAP_BYTES << 3)
-#define BITMAP_PAGELOCKED TRUE
-#define BITMAP_PAGEFREE   FALSE
+#include <assert.h>
 
 struct mem_info {
+  size_t total;
   size_t used;
   size_t free;
 };
 
-struct mem_bitmap {
+struct free_page {
+  uint8_t unused[PAGE_SIZE - sizeof(struct list)];
   struct list link;
-  size_t index;
-  size_t first_free;
-  struct bitmap super;
 };
 
+static addr_t page_pointer;
+static struct list freelist;
 static struct mem_info mem_info;
-static struct list mem_bitmaps;
-static struct mem_bitmap* first_free_bitmap;
-static addr_t next_bitmap_page;
-/* Initial bitmap that tracks the first 128MB of memory */
-static struct mem_bitmap mem_bitmap0;
-static char pages_bitmap0[BITMAP_BYTES];
+static struct bootinfo_mem_map* mem_map;
 
-#define TOBITMAP(a)   ((a) >> 27)
-#define TOINDEX(a)    (((a) & 0x7fff000) / PAGE_SIZE)
-#define TOPADDR(b, i) (((b) << 27) + (i) * PAGE_SIZE)
+static inline void
+ensure_mem_map_is_sorted(void) {
+  size_t i, j;
+  struct bootinfo_mem_segment *seg, *next_seg, *xchg_seg, tmp_seg;
 
-static void
-compute_mem_size(struct bootinfo_mem_map* mem_map) {
-  size_t i;
-  struct bootinfo_mem_segment* segment;
-  mem_set(&mem_info, 0, sizeof(mem_info));
-  for (i = 0; i < mem_map->entries; ++i) {
-    segment = &mem_map->segments[i];
-    mem_info.free += segment->length;
-    if (segment->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED &&
-        TOBITMAP(segment->addr) == 0)
-      pm_try_lock_pages(segment->addr, segment->length);
+  ASSERT(!K.inited.pm);
+
+  /* bubble sort the memory map */
+  for (i = 0; i < mem_map->entries - 1; ++i) {
+    seg = mem_map->segments + i;
+    xchg_seg = NULL;
+    /* check if this segment is out of order segment */
+    for (j = i + 1; j < mem_map->entries; ++j) {
+      next_seg = mem_map->segments + j;
+      if (seg->addr > next_seg->addr)
+        xchg_seg = next_seg;
+    }
+    /* exchange segments if needed */
+    if (xchg_seg) {
+      tmp_seg = *xchg_seg;
+      *xchg_seg = *seg;
+      *seg = tmp_seg;
+    }
   }
 }
 
-static void
-init_first_bitmap(void) {
-  list_init(&mem_bitmaps);
-  mem_bitmap0.index = 0;
-  mem_bitmap0.first_free = 0;
-  mem_bitmap0.super = bitmap_from(BITMAP_SIZE, pages_bitmap0);
-  list_insert(&mem_bitmaps, &mem_bitmap0.link);
-  first_free_bitmap = &mem_bitmap0;
+static inline void
+parse_mem_map(void) {
+  struct bootinfo_mem_segment* seg;
+  size_t i;
+  addr_t seg_start, seg_end;
+
+  ASSERT(!K.inited.pm);
+  mem_set(&mem_info, 0, sizeof(mem_info));
+
+  for (i = 0; i < mem_map->entries; ++i) {
+    seg = mem_map->segments + i;
+    seg_start = seg->addr;
+    seg_end = seg_start + seg->length;
+    mem_info.total += seg->length;
+    switch (seg->type) {
+      case BOOTINFO_MEM_SEGMENT_TYPE_AVAILABLE:
+        if (page_pointer == 0)
+          page_pointer = seg->addr;
+        mem_info.free += seg->length;
+        break;
+      case BOOTINFO_MEM_SEGMENT_TYPE_RESERVED:
+        if (page_pointer >= seg_start && page_pointer < seg_end)
+          page_pointer = 0;
+        mem_info.used += seg->length;
+        break;
+      default:
+        UNREACHABLE();
+    }
+  }
+}
+
+static inline void
+ensure_page_pointer_is_valid(void) {
+  size_t i;
+  struct bootinfo_mem_segment* seg;
+  addr_t seg_start, seg_end;
+
+  ASSERT(K.inited.pm);
+
+  for (i = 0; i < mem_map->entries; ++i) {
+    seg = mem_map->segments + i;
+    seg_start = seg->addr;
+    seg_end = seg_start + seg->length;
+    if (seg->type == BOOTINFO_MEM_SEGMENT_TYPE_AVAILABLE) {
+      if (page_pointer == 0)
+        page_pointer = seg->addr;
+      continue;
+    }
+    if (page_pointer >= seg_start && page_pointer < seg_end)
+      page_pointer = 0;
+  }
+}
+
+static inline addr_t
+next_untracked_page(void) {
+  addr_t prev_page_pointer;
+
+  ASSERT(K.inited.pm);
+
+  prev_page_pointer = page_pointer;
+  page_pointer += PAGE_SIZE;
+
+  ensure_page_pointer_is_valid();
+
+  ASSERT(prev_page_pointer < page_pointer);
+  /* FIXME: out of memory condition, handle this better */
+  ASSERT(page_pointer != 0);
+
+  return prev_page_pointer;
 }
 
 void
 pm_init(void) {
-  ASSERT(K.subsys_init.pm == FALSE);
-  init_first_bitmap();
-  compute_mem_size(&K.bootinfo->mem_map);
-  pm_try_lock_range(LAYOUT_PADDR_START, LAYOUT_PADDR_END);
-  next_bitmap_page = pm_request_page();
+  addr_t first_free_page;
+
+  ASSERT(!K.inited.pm);
+
+  mem_map = &K.bootinfo->mem_map;
+  page_pointer = first_free_page = PAGEALIGNUP(K.bootinfo->first_free_paddr);
+  list_init(&freelist);
+
+  ensure_mem_map_is_sorted();
+  parse_mem_map();
+
+  ASSERT(page_pointer >= first_free_page);
+
   LOGSUCCESS("physical memory manager initialized");
+  K.inited.pm = TRUE;
 }
+
+// static bool_t
+// is_reserved(addr_t paddr) {
+//   size_t i;
+//   addr_t seg_start, seg_end;
+//   struct bootinfo_mem_segment* seg;
+//   for (i = 0; i < mem_map->entries; ++i) {
+//     seg = mem_map->segments + i;
+//     seg_start = seg->addr;
+//     seg_end = seg_start + seg->length;
+//     if (UNLIKELY(paddr >= seg_start && paddr < seg_end)) {
+//       if (seg->type == BOOTINFO_MEM_SEGMENT_TYPE_RESERVED)
+//         return TRUE;
+//     }
+//   }
+//   return FALSE;
+// }
+
+// void pm_track_page(addr_t paddr) {
+//   struct free_page* page = (struct free_page*)layout_paddr_to_vaddr(paddr);
+//   if (!is_reserved(paddr))
+//     mem_set(page, 0, sizeof(*page));
+//   list_insert(&freelist, &page->link);
+// }
 
 addr_t
 pm_request_page(void) {
-  addr_t paddr;
-  if (PAGE_SIZE > mem_info.free)
-    TODO("swapping");
-  paddr = TOPADDR(first_free_bitmap->index, first_free_bitmap->first_free++);
-  ASSERT(pm_try_lock_page(paddr));
-  return paddr;
+  struct free_page* page;
+  addr_t page_paddr;
+
+  ASSERT(K.inited.pm);
+
+  if (UNLIKELY(list_is_empty(&freelist)))
+    page_paddr = next_untracked_page();
+  else {
+    ASSERT(&freelist != freelist.next);
+    page = CONTAINEROF(freelist.next, struct free_page, link);
+    list_remove(&page->link);
+    mem_set(page, 0, sizeof(*page));
+    page_paddr = layout_vaddr_to_paddr((addr_t)page);
+  }
+
+  return page_paddr;
 }
 
-addr_t
-pm_request_pages(size_t num) {
-  struct mem_bitmap *mem_bitmap, *next;
-  addr_t paddr;
-  status_t res;
-  size_t start_index, index, found = 0;
-  if (BYTES(num) > mem_info.free)
-    TODO("swapping");
-  mem_bitmap = first_free_bitmap;
-  for (index = mem_bitmap->first_free, start_index = index;
-       found < num && index < mem_bitmap->super.size;
-       ++index) {
-  retry:
-    res = bitmap_get(&mem_bitmap->super, index);
-    if (ISERROR(res)) {
-      ASSERT(res == -EINVAL);
-      next = CONTAINEROF(mem_bitmap->link.next, struct mem_bitmap, link);
-      if (next->index - mem_bitmap->index > 1) {
-        found = 0;
-        index = next->index * BITMAP_SIZE;
-        start_index = index;
+void
+pm_lock_pages(addr_t paddr, size_t n) {
+  struct free_page* page;
+
+  ASSERT(K.inited.pm);
+
+  if (paddr > page_pointer) {
+    page_pointer = paddr + PAGE_SIZE;
+    ensure_page_pointer_is_valid();
+  } else {
+    list_for_each(page, &freelist, link) {
+      if (UNLIKELY(paddr == layout_vaddr_to_paddr((addr_t)page))) {
+        list_remove(&page->link);
+        --n;
       }
-      mem_bitmap = next;
-      goto retry;
-    }
-    if (res == BITMAP_PAGEFREE)
-      ++found;
-    else {
-      start_index = index + 1;
-      found = 0;
+      if (n == 0)
+        break;
     }
   }
-  paddr = TOPADDR(mem_bitmap->index, start_index);
-  ASSERT(pm_try_lock_pages(paddr, BYTES(num)));
-  return paddr;
 }
 
-addr_t
-pm_request_bytes(size_t bytes) {
-  return pm_request_pages(PAGEALIGNUP(bytes) / PAGE_SIZE);
-}
-
-static struct mem_bitmap*
-create_bitmap(size_t index) {
-  struct mem_bitmap *mem_bitmap, *new_bitmap;
-  list_for_each(mem_bitmap, &mem_bitmaps, link) {
-    if (mem_bitmap->index > index)
-      break;
+void
+pm_release_pages(addr_t paddr, size_t n) {
+  struct free_page* page = (struct free_page*)layout_paddr_to_vaddr(paddr);
+  ASSERT(K.inited.pm);
+  ASSERT(paddr + BYTES(n) < page_pointer);
+  for (; n > 0; --n) {
+    list_insert(&freelist, &page->link);
+    ++page;
   }
-  new_bitmap = mm_alloc(sizeof(*new_bitmap));
-  ASSERT(new_bitmap != NULL);
-  new_bitmap->first_free = 0;
-  new_bitmap->index = 0;
-  new_bitmap->super = bitmap_from(BITMAP_SIZE, (ptr_t)next_bitmap_page);
-  list_insert(mem_bitmap->link.prev, &new_bitmap->link);
-  next_bitmap_page = pm_request_page();
-  return new_bitmap;
 }
 
-static void
-find_first_free_bitmap(void) {
-  struct mem_bitmap *mem_bitmap, *prev_bitmap = NULL;
-  list_for_each(mem_bitmap, &first_free_bitmap->link, link) {
-    if (mem_bitmap->super.unset > 0) {
-      first_free_bitmap = mem_bitmap;
-      return;
-    } else if (
-        prev_bitmap == NULL || mem_bitmap->index - prev_bitmap->index == 1)
-      prev_bitmap = mem_bitmap;
-  }
-  ASSERT(prev_bitmap != NULL);
-  first_free_bitmap = create_bitmap(prev_bitmap->index + 1);
-}
-
-static struct mem_bitmap*
-find_bitmap_by_index(size_t index) {
-  struct mem_bitmap* mem_bitmap;
-  list_for_each(mem_bitmap, &mem_bitmaps, link) {
-    if (mem_bitmap->index == index)
-      return mem_bitmap;
-  }
-  return NULL;
-}
-
-static bool_t
-find_first_free_index(void) {
-  status_t res;
-  do {
-    res = bitmap_get(&first_free_bitmap->super, first_free_bitmap->first_free);
-    if (ISERROR(res)) {
-      ASSERT(res == -EINVAL);
-      find_first_free_bitmap();
-    } else if (res == BITMAP_PAGEFREE)
-      return TRUE;
-  } while (++first_free_bitmap->first_free < first_free_bitmap->super.size);
-  return FALSE;
-}
-
-static bool_t
-try_set_page(addr_t paddr, bool_t state) {
-  struct mem_bitmap* mem_bitmap;
-  status_t sts;
-  size_t bitmap, index;
-  bitmap = TOBITMAP(paddr);
-  mem_bitmap = find_bitmap_by_index(bitmap);
-  if (mem_bitmap == NULL)
-    mem_bitmap = create_bitmap(bitmap);
-  index = TOINDEX(paddr);
-  sts = bitmap_set(&mem_bitmap->super, index, state);
-  return sts == SUCCESS;
-}
-
-bool_t
-pm_try_lock_page(addr_t paddr) {
-  size_t bitmap;
-  if (try_set_page(paddr, BITMAP_PAGELOCKED)) {
-    bitmap = TOBITMAP(paddr);
-    if (first_free_bitmap->index == bitmap && !find_first_free_index())
-      find_first_free_bitmap();
-    mem_info.used += PAGE_SIZE;
-    mem_info.free -= PAGE_SIZE;
-    return TRUE;
-  }
-  return FALSE;
-}
-
-bool_t
-pm_try_lock_pages(addr_t paddr, size_t bytes) {
-  size_t pages, page;
-  bool_t no_collisions;
-  if (bytes == 0)
-    return pm_try_lock_page(paddr);
-  pages = PAGES(bytes);
-  no_collisions = TRUE;
-  for (page = 0; page < pages; ++page) {
-    no_collisions &= pm_try_lock_page(paddr);
-    paddr += PAGE_SIZE;
-  }
-  return no_collisions;
-}
-
-bool_t
-pm_try_release_page(addr_t paddr) {
-  size_t index, bitmap;
-  if (try_set_page(paddr, BITMAP_PAGEFREE)) {
-    bitmap = TOBITMAP(paddr);
-    if (bitmap < first_free_bitmap->index)
-      first_free_bitmap = find_bitmap_by_index(bitmap);
-    if (bitmap == first_free_bitmap->index &&
-        (index = TOINDEX(paddr)) < first_free_bitmap->first_free)
-      first_free_bitmap->first_free = index;
-    mem_info.used -= PAGE_SIZE;
-    mem_info.free += PAGE_SIZE;
-    return TRUE;
-  }
-  return FALSE;
-}
-
-bool_t
-pm_try_release_pages(addr_t paddr, size_t bytes) {
-  size_t pages, page;
-  bool_t no_collisions;
-  if (bytes == 0)
-    return pm_try_release_page(paddr);
-  pages = PAGES(bytes);
-  no_collisions = TRUE;
-  for (page = 0; page < pages; ++page) {
-    no_collisions |= pm_try_release_page(paddr);
-    paddr += PAGE_SIZE;
-  }
-  return no_collisions;
+size_t
+pm_get_total_memory(void) {
+  return mem_info.total;
 }

@@ -44,8 +44,9 @@ typedef uint64_t size_t;
 #define SIZE_MAX UINT64_MAX
 
 typedef uint64_t addr_t;
-#define ADDR_MIN 0
-#define ADDR_MAX UINT64_MAX
+#define ADDR_MIN   0
+#define ADDR_MAX   UINT64_MAX
+#define ADDR_DUMMY ((addr_t) - 1)
 
 typedef void* ptr_t;
 #define NULL ((ptr_t)0)
@@ -57,5 +58,10 @@ typedef uint8_t bool_t;
 typedef int64_t status_t;
 #define SUCCESS    0
 #define ISERROR(e) ((e) < 0)
+
+typedef uint64_t flags_t;
+#define FLAGS_DUMMY 0x8000000000000000
+#define FLAGS_EMPTY 0
+#define FLAGS_ALL   0x7fffffffffffffff
 
 #endif

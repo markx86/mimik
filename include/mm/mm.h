@@ -7,7 +7,7 @@
 void mm_init(void);
 ptr_t mm_alloc(size_t sz);
 void mm_free(ptr_t* alloc);
-ptr_t mm_map(addr_t hint, size_t size, int flags);
-ptr_t mm_map_in_table(ptr_t table, addr_t hint, size_t size, int flags);
+status_t mm_map(addr_t vaddr, size_t size, flags_t flags);
+status_t mm_map_in(struct pt* table, addr_t vaddr, size_t size, flags_t flags);
 
 #endif

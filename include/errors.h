@@ -4,7 +4,7 @@
 enum error {
   EINVAL = 1,
   EOVERLAP,
-  EFULL,
+  ENOMEM,
   ENOMAP,
   ENOENT,
   ENOTIMPL,

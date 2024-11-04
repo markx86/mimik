@@ -1,10 +1,11 @@
 #include <common/acpi.h>
-#include <mm/vm.h>
 #include <mm/mm.h>
 #include <mem/mem.h>
 #include <mem/str.h>
+#include <mem/layout.h>
 #include <log/log.h>
 #include <assert.h>
+#include <kernel.h>
 
 struct acpi_sdt_header {
   char signature[4];
@@ -27,21 +28,6 @@ static const char* known_tbls[] = {
   [ACPI_TABLE_RSDT] = "RSDT",
   [ACPI_TABLE_SSDT] = "SSDT",
   [ACPI_TABLE_XSDT] = "XSDT"};
-
-static status_t
-map_table(addr_t paddr, struct acpi_sdt_header** out) {
-  status_t res;
-  res = vmk_map_bytes(paddr, sizeof(**out), (addr_t*)out, 0);
-  if (ISERROR(res))
-    return res;
-  /* FIXME: this could page-fault if (*out)->length is in the next page */
-  if ((*out)->length > PAGE_SIZE - ((addr_t)*out & 0xfff)) {
-    res = vmk_map_bytes(paddr, (*out)->length, (addr_t*)out, 0);
-    if (ISERROR(res))
-      return res;
-  }
-  return SUCCESS;
-}
 
 static bool_t
 checksum_matches(ptr_t ptr, size_t sz) {
@@ -94,23 +80,37 @@ acpi_init_generic(
     struct acpi_rsdp* rsdp,
     addr_t sdt_address,
     uint8_t revision) {
-  status_t res;
   if (!checksum_matches(rsdp, sizeof(*rsdp)))
     return -EINVAL;
   if (!signature_matches(rsdp->signature))
     return -EINVAL;
   if (rsdp->revision != revision)
     return -EINVAL;
-  res = map_table(sdt_address, &root);
-  if (ISERROR(res))
-    return res;
+  root = (struct acpi_sdt_header*)layout_paddr_to_vaddr(sdt_address);
   return SUCCESS;
+}
+
+static void
+map_n_tables(size_t n_tbls, size_t addr_size) {
+  size_t i, tbls_sz;
+  addr_t addr_mask;
+  uint64_t* paddr;
+  addr_mask = ~(((addr_t)-1) << (addr_size << 3));
+  tbls_sz = sizeof(struct acpi_sdt_header*) * (n_tbls + 1);
+  tbls = mm_alloc(tbls_sz);
+  mem_set(tbls, 0, tbls_sz);
+  paddr = (uint64_t*)(root + 1);
+  for (i = 0; i < n_tbls; ++i) {
+    tbls[i] =
+        (struct acpi_sdt_header*)layout_paddr_to_vaddr(*paddr & addr_mask);
+    paddr = (uint64_t*)((addr_t)paddr + addr_size);
+  }
+  tbls[n_tbls] = NULL;
 }
 
 static status_t
 acpi_init_rsdp(struct acpi_rsdp* rsdp) {
-  size_t i, n_tbls, tbls_sz;
-  uint32_t* paddrs;
+  size_t n_tbls;
   status_t res = acpi_init_generic(rsdp, rsdp->rsdt_address, 0);
   if (ISERROR(res))
     return res;
@@ -120,23 +120,13 @@ acpi_init_rsdp(struct acpi_rsdp* rsdp) {
     return -EINTEGRITY;
   /* map all the acpi tables in the RSDT */
   n_tbls = (root->length - sizeof(*root)) >> 2;
-  paddrs = (uint32_t*)(root + 1);
-  tbls_sz = sizeof(struct acpi_sdt_header*) * (n_tbls + 1);
-  tbls = mm_alloc(tbls_sz);
-  mem_set(tbls, 0, tbls_sz);
-  for (i = 0; i < n_tbls; ++i) {
-    res = map_table(paddrs[i], &tbls[i]);
-    if (ISERROR(res))
-      return res;
-  }
-  tbls[n_tbls] = NULL;
+  map_n_tables(n_tbls, sizeof(uint32_t));
   return SUCCESS;
 }
 
 static status_t
 acpi_init_xsdp(struct acpi_xsdp* xsdp) {
-  size_t i, n_tbls, tbls_sz;
-  uint64_t* paddrs;
+  size_t n_tbls;
   status_t res = acpi_init_generic(&xsdp->rsdp, xsdp->xsdt_address, 2);
   if (ISERROR(res))
     return res;
@@ -146,16 +136,7 @@ acpi_init_xsdp(struct acpi_xsdp* xsdp) {
     return -EINTEGRITY;
   /* map all the acpi tables in the XSDT */
   n_tbls = (root->length - sizeof(struct acpi_sdt_header)) >> 3;
-  paddrs = (uint64_t*)(root + 1);
-  tbls_sz = sizeof(struct acpi_sdt_header*) * (n_tbls + 1);
-  tbls = mm_alloc(tbls_sz);
-  mem_set(tbls, 0, tbls_sz);
-  for (i = 0; i < n_tbls; ++i) {
-    res = map_table(paddrs[i], &tbls[i]);
-    if (ISERROR(res))
-      return res;
-  }
-  tbls[n_tbls] = NULL;
+  map_n_tables(n_tbls, sizeof(uint64_t));
   return SUCCESS;
 }
 

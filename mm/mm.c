@@ -29,7 +29,7 @@ enum slab_type {
   SLAB_MAX
 };
 
-STATICASSERT(SLAB_MAX <= 0x10, "wow");
+STATICASSERT(SLAB_MAX <= 0x10, "too many slab types!");
 
 struct slab {
   enum slab_type type;
@@ -47,6 +47,9 @@ void
 mm_init(void) {
   size_t i;
   struct slab* s;
+  ASSERT(!K.inited.mm);
+  ASSERT(K.inited.pm);
+  ASSERT(K.inited.vm);
   for (i = 0; i < SLAB_MAX; ++i) {
     s = slabs + i;
     s->type = (enum slab_type)i;
@@ -54,6 +57,7 @@ mm_init(void) {
     list_init(&s->freelist);
   }
   LOGSUCCESS("kernel heap initialized");
+  K.inited.mm = TRUE;
 }
 
 static inline size_t
@@ -104,14 +108,13 @@ alloc_slab(struct slab* s) {
   struct list* chunk;
   size_t chunk_size;
   addr_t p, next;
+  status_t res;
 
   ASSERT(s->type < SLAB_MAX);
 
-  p = (addr_t)mm_map(
-      PAGEALIGNUP(s->end),
-      SLAB_GROW_SIZE,
-      VM_FLAG_WRITABLE | VM_FLAG_STRICT);
-  ASSERT(p != 0);
+  p = PAGEALIGNUP(s->end);
+  res = mm_map(p, SLAB_GROW_SIZE, VM_FLAG_WRITE);
+  ASSERT(res == SUCCESS);
 
   chunk_size = slab_size(s->type);
   p += SLAB_GROW_SIZE;
@@ -158,44 +161,46 @@ mm_free(ptr_t* alloc) {
   *alloc = NULL;
 }
 
-ptr_t
-mm_map(addr_t hint, size_t size, int flags) {
+status_t
+mm_map(addr_t vaddr, size_t size, flags_t flags) {
   size_t pages;
   status_t res;
-  addr_t paddr, vaddr;
+  addr_t cur_paddr, cur_vaddr;
 
   pages = PAGES(size);
-  res = vmk_reserve_pages(&hint, pages, flags);
+  res = vmk_reserve_pages(vaddr, pages, flags);
   if (ISERROR(res))
-    return NULL;
+    return res;
 
-  for (vaddr = hint; pages > 0; --pages) {
-    paddr = pm_request_page();
-    res = vmk_set_backing(vaddr, paddr);
+  for (cur_vaddr = vaddr; pages > 0; --pages) {
+    cur_paddr = pm_request_page();
+    /* TODO: add exception handling for pm_request_page() */
+    res = vmk_map_edit_paddr(cur_vaddr, cur_paddr);
     ASSERT(res == SUCCESS);
-    vaddr += PAGE_SIZE;
+    cur_vaddr += PAGE_SIZE;
   }
 
-  return (ptr_t)hint;
+  return SUCCESS;
 }
 
-ptr_t
-mm_map_in_table(ptr_t table, addr_t hint, size_t size, int flags) {
+status_t
+mm_map_in(struct pt* table, addr_t vaddr, size_t size, flags_t flags) {
   size_t pages;
   status_t res;
-  addr_t paddr, vaddr;
+  addr_t cur_paddr, cur_vaddr;
 
   pages = PAGES(size);
-  res = vm_reserve_pages(table, &hint, pages, flags);
+  res = vm_reserve_pages(table, vaddr, pages, flags);
   if (ISERROR(res))
-    return NULL;
+    return res;
 
-  for (vaddr = hint; pages > 0; --pages) {
-    paddr = pm_request_page();
-    res = vm_set_backing(table, vaddr, paddr);
+  for (cur_vaddr = vaddr; pages > 0; --pages) {
+    cur_paddr = pm_request_page();
+    /* TODO: add exception handling for pm_request_page() */
+    res = vm_map_edit_paddr(table, cur_vaddr, cur_paddr);
     ASSERT(res == SUCCESS);
-    vaddr += PAGE_SIZE;
+    cur_vaddr += PAGE_SIZE;
   }
 
-  return (ptr_t)hint;
+  return SUCCESS;
 }
