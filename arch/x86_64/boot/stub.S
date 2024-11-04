@@ -11,18 +11,23 @@ stub_stack:
 .section .entry.data, "aw", @progbits
 .align 8
 _bootinfo:
+  BOOTINFOENTRY(_bootinfo_data_pstart, .quad 0)
+  BOOTINFOENTRY(_bootinfo_data_vstart, .quad 0)
+  BOOTINFOENTRY(_bootinfo_data_pend, .quad 0)
+  BOOTINFOENTRY(_bootinfo_data_vend, .quad 0)
   BOOTINFOENTRY(_bootinfo_cmdline, .quad 0)
   BOOTINFOENTRY(_bootinfo_modules, .quad 0)
   BOOTINFOENTRY(_bootinfo_mem_map_entries, .quad 0)
   BOOTINFOENTRY(_bootinfo_mem_map_segments, .quad 0)
   BOOTINFOENTRY(_bootinfo_acpi_type, .quad 0)
   BOOTINFOENTRY(_bootinfo_acpi_struct, .fill 40 C 1 C 0)
+  BOOTINFOENTRY(_bootinfo_first_free_paddr, .quad 0)
 #undef C
 
 .section .entry.text, "ax"
 .code32
 
-/**
+/*
  * _stub32: entry for protected mode boot protocols
  *
  * Expected machine state:
@@ -134,7 +139,7 @@ enable_features:
 
 .code64
 
-/**
+/*
  * _stub64: entry for long mode boot protocols
  *
  * Expected machine state:
@@ -151,9 +156,9 @@ _stub64:
   /* set the fail address */
   movq $(HIGHER_HALF+_fail), (%rsp)
   /* make every pointer in _bootinfo a higher half pointer */
-  addq $HIGHER_HALF, (_bootinfo+0)
-  addq $HIGHER_HALF, (_bootinfo+24)
-  movq $(_bootinfo+8), %rsi
+  addq $HIGHER_HALF, (_bootinfo_cmdline)
+  addq $HIGHER_HALF, (_bootinfo_mem_map_segments)
+  movq $(_bootinfo_modules), %rsi
 0:
   movq %rsi, %rdi
   lodsq
@@ -166,9 +171,18 @@ _stub64:
 1:
   /* kernel main parameters (translated into higher half addresses) */
   movq $(HIGHER_HALF+_bootinfo), %rdi
-  movq $(HIGHER_HALF+_bootinfo_data), %rsi
-  popq %rdx
-  addq $HIGHER_HALF, %rdx
+  /* set _bootinfo_data_pstart */
+  movq $_bootinfo_data, %rax
+  movq %rax, 0(%rdi)
+  /* set _bootinfo_data_vstart */
+  addq $HIGHER_HALF, %rax
+  movq %rax, 8(%rdi)
+  /* set _bootinfo_data_pend */
+  movq %rbx, 16(%rdi)
+  /* set _bootinfo_data_vend */
+  addq $HIGHER_HALF, %rbx
+  movq %rbx, 24(%rdi)
+  /* call kernel_main */
   call kernel_main
 stall:
   hlt

@@ -32,10 +32,13 @@ struct bootinfo_mem_map {
 };
 
 struct bootinfo {
+  addr_t data_paddr_start, data_vaddr_start;
+  addr_t data_paddr_end, data_vaddr_end;
   char* cmdline;
   struct bootinfo_module* modules;
   struct bootinfo_mem_map mem_map;
   struct bootinfo_arch arch;
+  addr_t first_free_paddr;
 };
 
 #endif

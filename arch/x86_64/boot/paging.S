@@ -33,6 +33,8 @@ setup_paging:
   call next_cleared_pt
   pushl %edi /* pt   paddr */
   call next_cleared_pt
+  /* save the first free paddr after the pts */
+  movl %edi, (_bootinfo_first_free_paddr)
 
   /* store map start paddr */
   movl $_entry_paddr_start, %edx
